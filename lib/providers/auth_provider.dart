@@ -1,6 +1,7 @@
 
 // import 'package:flutter/material.dart';
 // import 'package:influencer_marketplace_application/services/auth_service.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
 // import '../models/user_model.dart';
 
 // class AuthProvider with ChangeNotifier {
@@ -17,7 +18,7 @@
 //     notifyListeners();
 //   }
 
-//   // SIGNUP
+//   // ---------------- EMAIL SIGNUP ----------------
 //   Future<String?> signUp(
 //       String name, String email, String password, String role) async {
 //     try {
@@ -29,11 +30,10 @@
 //       return e.toString();
 //     } finally {
 //       setLoading(false);
-//       notifyListeners();
 //     }
 //   }
 
-//   // LOGIN
+//   // ---------------- EMAIL LOGIN ----------------
 //   Future<String?> login(String email, String password) async {
 //     try {
 //       setLoading(true);
@@ -44,50 +44,55 @@
 //       return e.toString();
 //     } finally {
 //       setLoading(false);
-//       notifyListeners();
 //     }
 //   }
 
-//   // LOGOUT
+//   // ---------------- GOOGLE SIGN-IN ----------------
+//   Future<UserModel?> signInWithGoogle(BuildContext context) async {
+//     try {
+//       setLoading(true);
+//       final user = await _authService.signInWithGoogle(context);
+//       if (user != null) {
+//         _currentUser = user;
+//         notifyListeners();
+//         return user;
+//       }
+//       return null;
+//     } catch (e) {
+//       debugPrint("Google sign-in failed: $e");
+//       return null;
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   // ---------------- LOGOUT ----------------
 //   Future<void> logout() async {
 //     await _authService.logout();
 //     _currentUser = null;
 //     notifyListeners();
 //   }
 
-//   // PASSWORD RESET
+//   // ---------------- PASSWORD RESET ----------------
 //   Future<String?> resetPassword(String email) async {
-//     try {
-//       await _authService.resetPassword(email);
-//       return null;
-//     } catch (e) {
-//       return e.toString();
-//     }
+//   try {
+//     await Supabase.instance.client.auth.resetPasswordForEmail(
+//       email,
+//       redirectTo: 'io.supabase.influencerapp://login-callback',
+//     );
+//     return null;
+//   } on AuthException catch (e) {
+//     return e.message;
+//   } catch (e) {
+//     return "Error: $e";
 //   }
+// }
 
-//   // GOOGLE AUTH (service expects BuildContext)
-//   Future<String?> loginWithGoogle(BuildContext context) async {
-//     try {
-//       setLoading(true);
-//       final user = await _authService.signInWithGoogle(context);
-//       if (user != null) {
-//         _currentUser = user;
-//         return null;
-//       } else {
-//         return "Google sign-in cancelled.";
-//       }
-//     } catch (e) {
-//       return e.toString();
-//     } finally {
-//       setLoading(false);
-//       notifyListeners();
-//     }
-//   }
 
-//   // HANDLE GOOGLE USER
-//   Future<UserModel?> handleGoogleUser() async {
+//   // ---------------- CURRENT USER ----------------
+//   Future<UserModel?> getCurrentUser() async {
 //     try {
-//       final user = await _authService.handleGoogleUser();
+//       final user = await _authService.getCurrentUser();
 //       _currentUser = user;
 //       notifyListeners();
 //       return user;
@@ -95,8 +100,12 @@
 //       return null;
 //     }
 //   }
+//   set currentUser(UserModel? user) {
+//   _currentUser = user;
+//   notifyListeners();
 // }
-// correct code//
+
+// }
 import 'package:flutter/material.dart';
 import 'package:influencer_marketplace_application/services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -110,6 +119,7 @@ class AuthProvider with ChangeNotifier {
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
+  String? get userRole => _currentUser?.role;
 
   void setLoading(bool value) {
     _isLoading = value;
@@ -172,28 +182,19 @@ class AuthProvider with ChangeNotifier {
   }
 
   // ---------------- PASSWORD RESET ----------------
-  // Future<String?> resetPassword(String email) async {
-  //   try {
-  //     await _authService.resetPassword(email);
-  //     return null;
-  //   } catch (e) {
-  //     return e.toString();
-  //   }
-  // }
   Future<String?> resetPassword(String email) async {
-  try {
-    await Supabase.instance.client.auth.resetPasswordForEmail(
-      email,
-      redirectTo: 'io.supabase.influencerapp://login-callback',
-    );
-    return null;
-  } on AuthException catch (e) {
-    return e.message;
-  } catch (e) {
-    return "Error: $e";
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'io.supabase.influencerapp://login-callback',
+      );
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (e) {
+      return "Error: $e";
+    }
   }
-}
-
 
   // ---------------- CURRENT USER ----------------
   Future<UserModel?> getCurrentUser() async {
@@ -206,9 +207,9 @@ class AuthProvider with ChangeNotifier {
       return null;
     }
   }
-  set currentUser(UserModel? user) {
-  _currentUser = user;
-  notifyListeners();
-}
 
+  set currentUser(UserModel? user) {
+    _currentUser = user;
+    notifyListeners();
+  }
 }

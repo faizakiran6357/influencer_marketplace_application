@@ -1,9 +1,13 @@
 
 // import 'package:flutter/material.dart';
+// import 'package:influencer_marketplace_application/screens/auth/brand_dashboard.dart';
+// import 'package:influencer_marketplace_application/screens/auth/influencer_dashboard.dart';
+// import 'package:influencer_marketplace_application/screens/influencer/influencer_dashboard.dart';
 // import 'package:supabase_flutter/supabase_flutter.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 // import '../models/user_model.dart';
 // import '../screens/auth/role_selection_screen.dart';
+
 
 // class SupabaseAuthService {
 //   final supabase = Supabase.instance.client;
@@ -16,33 +20,31 @@
 //           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhZXBxbmZlbmtkdXVlZGl3Y2ZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NjIyNjMsImV4cCI6MjA3NzEzODI2M30.jUvIBlonLDg7gAcJimfaNKYUCrT7fu7_z4dUrB5Fpz4',
 //     );
 //   }
+
 //   // ---------------- EMAIL SIGNUP ----------------
-// Future<UserModel?> signUp(
-//     String name, String email, String password, String role) async {
-//   final response =
-//       await supabase.auth.signUp(email: email, password: password);
-//   if (response.user == null) return null;
+//   Future<UserModel?> signUp(
+//       String name, String email, String password, String role) async {
+//     final response =
+//         await supabase.auth.signUp(email: email, password: password);
+//     if (response.user == null) return null;
 
-//   final userId = response.user!.id;
+//     final userId = response.user!.id;
+//     final roleToInsert = role[0].toUpperCase() + role.substring(1).toLowerCase();
 
-//   // Capitalize role to match Supabase constraint
-//   final roleToInsert = role[0].toUpperCase() + role.substring(1).toLowerCase();
+//     await supabase.from('profiles').insert({
+//       'id': userId,
+//       'name': name,
+//       'email': email,
+//       'role': roleToInsert,
+//     });
 
-//   // Insert profile into Supabase
-//   await supabase.from('profiles').insert({
-//     'id': userId,
-//     'name': name,
-//     'email': email,
-//     'role': roleToInsert,
-//   });
-
-//   return UserModel(
-//     id: userId,
-//     name: name,
-//     email: email,
-//     role: roleToInsert,
-//   );
-// }
+//     return UserModel(
+//       id: userId,
+//       name: name,
+//       email: email,
+//       role: roleToInsert,
+//     );
+//   }
 
 //   // ---------------- EMAIL LOGIN ----------------
 //   Future<UserModel?> login(String email, String password) async {
@@ -73,26 +75,26 @@
 
 //   // ---------------- PASSWORD RESET ----------------
 //   Future<void> resetPassword(String email) async {
-//   try {
-//     await Supabase.instance.client.auth.resetPasswordForEmail(
-//       email,
-//       // 👇 match scheme and host from manifest
-//       redirectTo: 'io.supabase.influencerapp://login-callback',
-//     );
-//   } on AuthException catch (e) {
-//     throw Exception(e.message);
-//   } catch (e) {
-//     throw Exception("Unexpected error: $e");
+//     try {
+//       await Supabase.instance.client.auth.resetPasswordForEmail(
+//         email,
+//         redirectTo: 'io.supabase.influencerapp://login-callback',
+//       );
+//     } on AuthException catch (e) {
+//       throw Exception(e.message);
+//     } catch (e) {
+//       throw Exception("Unexpected error: $e");
+//     }
 //   }
-// }
-
 
 //   // ---------------- GET CURRENT USER ----------------
 //   Future<UserModel?> getCurrentUser() async {
 //     final user = supabase.auth.currentUser;
 //     if (user == null) return null;
+
 //     final data =
-//         await supabase.from('profiles').select().eq('id', user.id).single();
+//         await supabase.from('profiles').select().eq('id', user.id).maybeSingle();
+//     if (data == null) return null;
 //     return UserModel.fromMap(data);
 //   }
 
@@ -108,100 +110,91 @@
 //     }).eq('id', userId);
 //   }
 
-//   // ---------------- GOOGLE SIGNUP / LOGIN ----------------
-
-// Future<UserModel?> signInWithGoogle(BuildContext context) async {
-//   try {
-//     const webClientId =
-//         '467384361743-ovulm9669fqu3p4sbe7270fnra7itqov.apps.googleusercontent.com';
-
-//     final googleSignIn = GoogleSignIn(
-//       scopes: ['email', 'profile'],
-//       serverClientId: webClientId,
-//     );
-
-//     // Ensure user picks an account fresh each time
+//   // ---------------- GOOGLE SIGN-IN ----------------
+//   Future<UserModel?> signInWithGoogle(BuildContext context) async {
 //     try {
-//       final currentUser = await googleSignIn.signInSilently();
-//       if (currentUser != null) await googleSignIn.disconnect();
-//     } catch (_) {}
+//       const webClientId =
+//           '467384361743-ovulm9669fqu3p4sbe7270fnra7itqov.apps.googleusercontent.com';
 
-//     final googleUser = await googleSignIn.signIn();
-//     if (googleUser == null) return null; // user canceled
+//       final googleSignIn = GoogleSignIn(
+//         scopes: ['email', 'profile'],
+//         serverClientId: webClientId,
+//       );
 
-//     final googleAuth = await googleUser.authentication;
-//     if (googleAuth.idToken == null || googleAuth.accessToken == null) {
-//       throw Exception("Missing Google Auth Tokens");
-//     }
+//       // Ensure clean account selection
+//       try {
+//         final currentUser = await googleSignIn.signInSilently();
+//         if (currentUser != null) await googleSignIn.disconnect();
+//       } catch (_) {}
 
-//     // ✅ Sign in with Supabase using Google tokens
-//     final response = await supabase.auth.signInWithIdToken(
-//       provider: OAuthProvider.google,
-//       idToken: googleAuth.idToken!,
-//       accessToken: googleAuth.accessToken!,
-//     );
+//       final googleUser = await googleSignIn.signIn();
+//       if (googleUser == null) return null;
 
-//     final user = response.user;
-//     if (user == null) throw Exception("Supabase sign-in failed");
+//       final googleAuth = await googleUser.authentication;
+//       if (googleAuth.idToken == null || googleAuth.accessToken == null) {
+//         throw Exception("Missing Google Auth Tokens");
+//       }
 
-//     // ✅ Check if user already has profile
-//     final existing = await supabase
-//         .from('profiles')
-//         .select()
-//         .eq('id', user.id)
-//         .maybeSingle();
+//       final response = await supabase.auth.signInWithIdToken(
+//         provider: OAuthProvider.google,
+//         idToken: googleAuth.idToken!,
+//         accessToken: googleAuth.accessToken,
+//       );
 
-//     if (existing == null) {
-//       // New Google user → go to Role Selection
-//       Navigator.pushReplacement(
-//         context,
-//         MaterialPageRoute(
-//           builder: (_) => RoleSelectionScreen(
-//             userId: user.id,
-//             email: user.email ?? '',
-//             name: googleUser.displayName ?? 'New User',
+//       final user = response.user;
+//       if (user == null) throw Exception("Supabase sign-in failed");
+
+//       final existing = await supabase
+//           .from('profiles')
+//           .select()
+//           .eq('id', user.id)
+//           .maybeSingle();
+
+//       if (existing == null) {
+//         // New Google user → go to role selection
+//         Navigator.pushReplacement(
+//           context,
+//           MaterialPageRoute(
+//             builder: (_) => RoleSelectionScreen(
+//               userId: user.id,
+//               email: user.email ?? '',
+//               name: googleUser.displayName ?? 'New User',
+//             ),
 //           ),
-//         ),
+//         );
+//         return null;
+//       } else {
+//         final userModel = UserModel.fromMap(existing);
+
+//         // ✅ Navigate to dashboard by role
+//         if (userModel.role.toLowerCase() == 'brand') {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(builder: (_) => const BrandDashboardScreen()),
+//           );
+//         } else {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(builder: (_) => const InfluencerDashboard()),
+//           );
+//         }
+
+//         return userModel;
+//       }
+//     } catch (e) {
+//       debugPrint("Google sign-in error: $e");
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Error: $e")),
 //       );
 //       return null;
-//     } else {
-//       // ✅ Existing user → go to HomeScreen instead of showing SnackBar
-//       Navigator.pushReplacementNamed(context, '/home');
-//       return UserModel.fromMap(existing);
 //     }
-//   } catch (e) {
-//     debugPrint("Google sign-in error: $e");
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text("Error: $e")),
-//     );
-//     return null;
-//   }
-// }
-
-
-//   // ---------------- HANDLE GOOGLE USER ----------------
-//   Future<UserModel?> handleGoogleUser() async {
-//     final user = supabase.auth.currentUser;
-//     if (user == null) return null;
-
-//     final existing = await supabase
-//         .from('profiles')
-//         .select()
-//         .eq('id', user.id)
-//         .maybeSingle();
-
-//     if (existing == null) return null;
-//     return UserModel.fromMap(existing);
 //   }
 // }
 import 'package:flutter/material.dart';
-import 'package:influencer_marketplace_application/screens/auth/brand_dashboard.dart';
-import 'package:influencer_marketplace_application/screens/auth/influencer_dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 import '../screens/auth/role_selection_screen.dart';
-
 
 class SupabaseAuthService {
   final supabase = Supabase.instance.client;
@@ -223,14 +216,22 @@ class SupabaseAuthService {
     if (response.user == null) return null;
 
     final userId = response.user!.id;
+
+    // Capitalize role
     final roleToInsert = role[0].toUpperCase() + role.substring(1).toLowerCase();
 
+    // Insert into profiles
     await supabase.from('profiles').insert({
       'id': userId,
       'name': name,
       'email': email,
       'role': roleToInsert,
     });
+
+    // ✅ Ensure influencer record exists
+    if (roleToInsert == 'Influencer') {
+      await ensureInfluencerRecord(userId, email, name);
+    }
 
     return UserModel(
       id: userId,
@@ -255,6 +256,12 @@ class SupabaseAuthService {
         .maybeSingle();
 
     if (userData == null) return null;
+
+    // ✅ Also ensure influencer record exists if user is influencer
+    if (userData['role'] == 'Influencer') {
+      await ensureInfluencerRecord(userId, email, userData['name']);
+    }
+
     return UserModel.fromMap(userData);
   }
 
@@ -281,14 +288,124 @@ class SupabaseAuthService {
     }
   }
 
+  // ---------------- GOOGLE SIGN-IN ----------------
+  Future<UserModel?> signInWithGoogle(BuildContext context) async {
+    try {
+      const webClientId =
+          '467384361743-ovulm9669fqu3p4sbe7270fnra7itqov.apps.googleusercontent.com';
+
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: webClientId,
+      );
+
+      // Disconnect silent sessions
+      try {
+        final currentUser = await googleSignIn.signInSilently();
+        if (currentUser != null) await googleSignIn.disconnect();
+      } catch (_) {}
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return null;
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+      if (idToken == null || accessToken == null) {
+        throw Exception("Missing Google Auth Tokens");
+      }
+
+      // Supabase sign-in
+      final response = await supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      final user = response.user;
+      if (user == null) throw Exception("Supabase sign-in failed");
+
+      // Check profile
+      final existing = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (existing == null) {
+        // New Google user → choose role
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoleSelectionScreen(
+              userId: user.id,
+              email: user.email ?? '',
+              name: googleUser.displayName ?? 'New User',
+            ),
+          ),
+        );
+        return null;
+      } else {
+        // ✅ Ensure influencer record exists if role = Influencer
+        if (existing['role'] == 'Influencer') {
+          await ensureInfluencerRecord(
+            user.id,
+            user.email ?? '',
+            existing['name'] ?? googleUser.displayName ?? 'Influencer',
+          );
+        }
+
+        return UserModel.fromMap(existing);
+      }
+    } catch (e) {
+      debugPrint("Google sign-in error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+      return null;
+    }
+  }
+
+  // ---------------- HANDLE GOOGLE USER ----------------
+  Future<UserModel?> handleGoogleUser() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return null;
+
+    final existing = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (existing == null) return null;
+    return UserModel.fromMap(existing);
+  }
+
+  // ---------------- ENSURE INFLUENCER RECORD ----------------
+  Future<void> ensureInfluencerRecord(
+      String userId, String email, String name) async {
+    final existing = await supabase
+        .from('influencers')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (existing == null) {
+      await supabase.from('influencers').insert({
+        'id': userId,
+        'name': name,
+        'email': email,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
   // ---------------- GET CURRENT USER ----------------
   Future<UserModel?> getCurrentUser() async {
     final user = supabase.auth.currentUser;
     if (user == null) return null;
-
     final data =
-        await supabase.from('profiles').select().eq('id', user.id).maybeSingle();
-    if (data == null) return null;
+        await supabase.from('profiles').select().eq('id', user.id).single();
     return UserModel.fromMap(data);
   }
 
@@ -302,85 +419,5 @@ class SupabaseAuthService {
       if (bio != null) 'bio': bio,
       if (website != null) 'website': website,
     }).eq('id', userId);
-  }
-
-  // ---------------- GOOGLE SIGN-IN ----------------
-  Future<UserModel?> signInWithGoogle(BuildContext context) async {
-    try {
-      const webClientId =
-          '467384361743-ovulm9669fqu3p4sbe7270fnra7itqov.apps.googleusercontent.com';
-
-      final googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile'],
-        serverClientId: webClientId,
-      );
-
-      // Ensure clean account selection
-      try {
-        final currentUser = await googleSignIn.signInSilently();
-        if (currentUser != null) await googleSignIn.disconnect();
-      } catch (_) {}
-
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return null;
-
-      final googleAuth = await googleUser.authentication;
-      if (googleAuth.idToken == null || googleAuth.accessToken == null) {
-        throw Exception("Missing Google Auth Tokens");
-      }
-
-      final response = await supabase.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: googleAuth.idToken!,
-        accessToken: googleAuth.accessToken,
-      );
-
-      final user = response.user;
-      if (user == null) throw Exception("Supabase sign-in failed");
-
-      final existing = await supabase
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .maybeSingle();
-
-      if (existing == null) {
-        // New Google user → go to role selection
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => RoleSelectionScreen(
-              userId: user.id,
-              email: user.email ?? '',
-              name: googleUser.displayName ?? 'New User',
-            ),
-          ),
-        );
-        return null;
-      } else {
-        final userModel = UserModel.fromMap(existing);
-
-        // ✅ Navigate to dashboard by role
-        if (userModel.role.toLowerCase() == 'brand') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const BrandDashboardScreen()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const InfluencerDashboardScreen()),
-          );
-        }
-
-        return userModel;
-      }
-    } catch (e) {
-      debugPrint("Google sign-in error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-      return null;
-    }
   }
 }

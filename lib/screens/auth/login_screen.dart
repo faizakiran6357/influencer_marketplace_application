@@ -201,6 +201,7 @@ import 'package:influencer_marketplace_application/screens/auth/brand_dashboard.
 import 'package:influencer_marketplace_application/screens/auth/forgot_password_screen.dart';
 import 'package:influencer_marketplace_application/screens/auth/influencer_dashboard.dart';
 import 'package:influencer_marketplace_application/screens/auth/signup_screen.dart';
+import 'package:influencer_marketplace_application/screens/influencer/influencer_dashboard.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/custom_button.dart';
@@ -222,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (role.toLowerCase() == 'influencer') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const InfluencerDashboardScreen()),
+        MaterialPageRoute(builder: (_) => const InfluencerDashboard()),
       );
     } else if (role.toLowerCase() == 'brand') {
       Navigator.pushReplacement(

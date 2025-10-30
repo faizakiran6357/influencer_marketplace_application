@@ -1,9 +1,11 @@
 
 // import 'package:flutter/material.dart';
 // import 'package:influencer_marketplace_application/providers/auth_provider.dart';
+// import 'package:influencer_marketplace_application/screens/auth/brand_dashboard.dart';
 // import 'package:influencer_marketplace_application/screens/auth/forgot_password_screen.dart';
-// import 'package:influencer_marketplace_application/screens/auth/home_screen.dart';
+// import 'package:influencer_marketplace_application/screens/auth/influencer_dashboard.dart';
 // import 'package:influencer_marketplace_application/screens/auth/signup_screen.dart';
+// import 'package:influencer_marketplace_application/screens/influencer/influencer_dashboard.dart';
 // import 'package:provider/provider.dart';
 // import '../../utils/app_theme.dart';
 // import '../../widgets/custom_button.dart';
@@ -20,6 +22,24 @@
 //   final _emailController = TextEditingController();
 //   final _passwordController = TextEditingController();
 //   bool _obscure = true;
+
+//   void _navigateToDashboard(String role) {
+//     if (role.toLowerCase() == 'influencer') {
+//       Navigator.pushReplacement(
+//         context,
+//         MaterialPageRoute(builder: (_) => const InfluencerDashboard()),
+//       );
+//     } else if (role.toLowerCase() == 'brand') {
+//       Navigator.pushReplacement(
+//         context,
+//         MaterialPageRoute(builder: (_) => const BrandDashboardScreen()),
+//       );
+//     } else {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Unknown role! Please contact support.")),
+//       );
+//     }
+//   }
 
 //   @override
 //   Widget build(BuildContext context) {
@@ -99,19 +119,15 @@
 //                         _passwordController.text.trim(),
 //                       );
 
-//                       if (error == null) {
+//                       if (error == null && authProvider.currentUser != null) {
+//                         final role = authProvider.currentUser!.role;
 //                         ScaffoldMessenger.of(context).showSnackBar(
-//                           const SnackBar(content: Text("Login successful")),
+//                           SnackBar(content: Text("Welcome, $role!")),
 //                         );
-
-//                         // ✅ Navigate to HomeScreen
-//                         Navigator.pushReplacement(
-//                           context,
-//                           MaterialPageRoute(builder: (_) => const HomeScreen()),
-//                         );
+//                         _navigateToDashboard(role);
 //                       } else {
 //                         ScaffoldMessenger.of(context).showSnackBar(
-//                           SnackBar(content: Text(error)),
+//                           SnackBar(content: Text(error ?? "Login failed")),
 //                         );
 //                       }
 //                     },
@@ -134,18 +150,16 @@
 
 //                       if (user != null) {
 //                         ScaffoldMessenger.of(context).showSnackBar(
-//                           const SnackBar(content: Text("Signed in with Google")),
+//                           SnackBar(
+//                               content:
+//                                   Text("Signed in as ${user.role} via Google")),
 //                         );
-
-//                         // ✅ Navigate to HomeScreen
-//                         Navigator.pushReplacement(
-//                           context,
-//                           MaterialPageRoute(builder: (_) => const HomeScreen()),
-//                         );
+//                         _navigateToDashboard(user.role);
 //                       } else {
 //                         ScaffoldMessenger.of(context).showSnackBar(
 //                           const SnackBar(
-//                               content: Text("Google sign-in cancelled or failed")),
+//                               content: Text(
+//                                   "Google sign-in cancelled or failed.")),
 //                         );
 //                       }
 //                     },
@@ -195,13 +209,15 @@
 //     );
 //   }
 // }
+// correct code above//
 import 'package:flutter/material.dart';
 import 'package:influencer_marketplace_application/providers/auth_provider.dart';
+import 'package:influencer_marketplace_application/providers/influencer_provider.dart';
 import 'package:influencer_marketplace_application/screens/auth/brand_dashboard.dart';
 import 'package:influencer_marketplace_application/screens/auth/forgot_password_screen.dart';
-import 'package:influencer_marketplace_application/screens/auth/influencer_dashboard.dart';
 import 'package:influencer_marketplace_application/screens/auth/signup_screen.dart';
 import 'package:influencer_marketplace_application/screens/influencer/influencer_dashboard.dart';
+import 'package:influencer_marketplace_application/screens/influencer/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/custom_button.dart';
@@ -219,12 +235,24 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscure = true;
 
-  void _navigateToDashboard(String role) {
+  Future<void> _navigateAfterLogin(BuildContext context, String role, String userId) async {
+    final influencerProvider = context.read<InfluencerProvider>();
+
     if (role.toLowerCase() == 'influencer') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const InfluencerDashboard()),
-      );
+      final influencer = await influencerProvider.fetchInfluencer(userId);
+      final completed = influencerProvider.influencer?.onboardingCompleted ?? false;
+
+      if (completed) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const InfluencerDashboard()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        );
+      }
     } else if (role.toLowerCase() == 'brand') {
       Navigator.pushReplacement(
         context,
@@ -281,9 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icons.lock_outline,
                     obscureText: _obscure,
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscure ? Icons.visibility_off : Icons.visibility,
-                      ),
+                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
@@ -295,8 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: TextButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => const ForgotPasswordScreen()),
+                        MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
                       ),
                       child: const Text(
                         "Forgot Password?",
@@ -316,11 +341,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
 
                       if (error == null && authProvider.currentUser != null) {
-                        final role = authProvider.currentUser!.role;
+                        final user = authProvider.currentUser!;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Welcome, $role!")),
+                          SnackBar(content: Text("Welcome, ${user.role}!")),
                         );
-                        _navigateToDashboard(role);
+                        await _navigateAfterLogin(context, user.role, user.id);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(error ?? "Login failed")),
@@ -343,19 +368,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: () async {
                       final user = await authProvider.signInWithGoogle(context);
-
                       if (user != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content:
-                                  Text("Signed in as ${user.role} via Google")),
+                          SnackBar(content: Text("Signed in as ${user.role} via Google")),
                         );
-                        _navigateToDashboard(user.role);
+                        await _navigateAfterLogin(context, user.role, user.id);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  "Google sign-in cancelled or failed.")),
+                          const SnackBar(content: Text("Google sign-in cancelled or failed.")),
                         );
                       }
                     },
@@ -375,8 +395,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextButton(
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (_) => const SignUpScreen()),
+                          MaterialPageRoute(builder: (_) => const SignUpScreen()),
                         ),
                         child: const Text(
                           "Sign Up",
@@ -396,9 +415,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Container(
             color: Colors.black.withOpacity(0.4),
             child: const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryColor,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.primaryColor),
             ),
           ),
       ],

@@ -1,40 +1,387 @@
-import 'package:flutter/material.dart';
-import 'package:influencer_marketplace_application/models/influencer_model.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/influencer_provider.dart';
-import '../../services/influencer_service.dart';
+// import 'package:flutter/material.dart';
+// import 'package:influencer_marketplace_application/models/influencer_model.dart';
+// import 'package:provider/provider.dart';
+// import '../../providers/auth_provider.dart';
+// import '../../providers/influencer_provider.dart';
+// import '../../services/influencer_service.dart';
 
-class EditInfluencerProfile extends StatelessWidget {
+// class EditInfluencerProfile extends StatelessWidget {
+//   const EditInfluencerProfile({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final user = context.read<AuthProvider>().currentUser!;
+//     final service = InfluencerService();
+//     final nameCtrl = TextEditingController();
+//     final bioCtrl = TextEditingController();
+//     final nicheCtrl = TextEditingController();
+
+//     return Scaffold(
+//       appBar: AppBar(title: const Text("Edit Profile")),
+//       body: Padding(
+//         padding: const EdgeInsets.all(20),
+//         child: Column(children: [
+//           TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: "Name")),
+//           TextField(controller: bioCtrl, decoration: const InputDecoration(labelText: "Bio")),
+//           TextField(controller: nicheCtrl, decoration: const InputDecoration(labelText: "Niche")),
+//           const SizedBox(height: 20),
+//           ElevatedButton(
+//             onPressed: () async {
+//               await service.upsertInfluencer(
+//                 InfluencerModel(id: user.id, name: nameCtrl.text, bio: bioCtrl.text, niche: nicheCtrl.text),
+//               );
+//               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profile saved")));
+//             },
+//             child: const Text("Save"),
+//           ),
+//         ]),
+//       ),
+//     );
+//   }
+// }
+// import 'dart:typed_data';
+// import 'package:flutter/material.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:provider/provider.dart';
+// import '../../providers/influencer_provider.dart';
+// import '../../models/influencer_model.dart';
+// import '../../utils/app_theme.dart';
+
+// class EditInfluencerProfile extends StatefulWidget {
+//   const EditInfluencerProfile({super.key});
+
+//   @override
+//   State<EditInfluencerProfile> createState() => _EditInfluencerProfileState();
+// }
+
+// class _EditInfluencerProfileState extends State<EditInfluencerProfile> {
+//   final _nameController = TextEditingController();
+//   final _bioController = TextEditingController();
+//   final _nicheController = TextEditingController();
+//   final _followersController = TextEditingController();
+//   final _engagementController = TextEditingController();
+//   final _instagramController = TextEditingController();
+//   final _tiktokController = TextEditingController();
+//   final _youtubeController = TextEditingController();
+
+//   Uint8List? _newProfileImage;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     final influencer = context.read<InfluencerProvider>().influencer;
+//     if (influencer != null) {
+//       _nameController.text = influencer.name ?? '';
+//       _bioController.text = influencer.bio ?? '';
+//       _nicheController.text = influencer.niche ?? '';
+//       _followersController.text = influencer.followerCount?.toString() ?? '';
+//       _engagementController.text = influencer.engagementRate?.toString() ?? '';
+//       _instagramController.text = influencer.instagramUrl ?? '';
+//       _tiktokController.text = influencer.tiktokUrl ?? '';
+//       _youtubeController.text = influencer.youtubeUrl ?? '';
+//     }
+//   }
+
+//   Future<void> _pickImage() async {
+//     final picker = ImagePicker();
+//     final result = await picker.pickImage(source: ImageSource.gallery);
+//     if (result != null) {
+//       final bytes = await result.readAsBytes();
+//       setState(() => _newProfileImage = bytes);
+//     }
+//   }
+
+//   Future<void> _saveProfile() async {
+//     final provider = context.read<InfluencerProvider>();
+//     final influencer = provider.influencer;
+//     if (influencer == null) return;
+
+//     // Update profile image first if changed
+//     String? profileUrl = influencer.profileImage;
+//     if (_newProfileImage != null) {
+//       profileUrl = await provider.uploadProfileImage(influencer.id, _newProfileImage!);
+//     }
+
+//     final updated = influencer.copyWith(
+//       name: _nameController.text.trim(),
+//       bio: _bioController.text.trim(),
+//       niche: _nicheController.text.trim(),
+//       followerCount: int.tryParse(_followersController.text.trim()),
+//       engagementRate: double.tryParse(_engagementController.text.trim()),
+//       instagramUrl: _instagramController.text.trim(),
+//       tiktokUrl: _tiktokController.text.trim(),
+//       youtubeUrl: _youtubeController.text.trim(),
+//       profileImage: profileUrl,
+//     );
+
+//     await provider.updateInfluencer(updated);
+
+//     if (mounted) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Profile updated successfully!")),
+//       );
+//       Navigator.pop(context);
+//     }
+//   }
+
+//   Widget _buildField(TextEditingController controller, String label,
+//       {TextInputType keyboard = TextInputType.text}) {
+//     return TextField(
+//       controller: controller,
+//       keyboardType: keyboard,
+//       decoration: InputDecoration(
+//         labelText: label,
+//         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final influencer = context.watch<InfluencerProvider>().influencer;
+//     final profileImage = _newProfileImage != null
+//         ? MemoryImage(_newProfileImage!)
+//         : (influencer?.profileImage != null ? NetworkImage(influencer!.profileImage!) : null);
+
+//     return Scaffold(
+//       appBar: AppBar(title: const Text("Edit Profile")),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           children: [
+//             GestureDetector(
+//               onTap: _pickImage,
+//               child: CircleAvatar(
+//                 radius: 50,
+//                 backgroundColor: Colors.grey[300],
+//                 backgroundImage: profileImage as ImageProvider<Object>?,
+//                 child: profileImage == null
+//                     ? const Icon(Icons.person, size: 50, color: Colors.white)
+//                     : null,
+//               ),
+//             ),
+//             const SizedBox(height: 16),
+//             _buildField(_nameController, "Full Name"),
+//             const SizedBox(height: 10),
+//             _buildField(_bioController, "Bio"),
+//             const SizedBox(height: 10),
+//             _buildField(_nicheController, "Niche"),
+//             const SizedBox(height: 10),
+//             _buildField(_followersController, "Followers", keyboard: TextInputType.number),
+//             const SizedBox(height: 10),
+//             _buildField(_engagementController, "Engagement Rate (%)", keyboard: TextInputType.number),
+//             const SizedBox(height: 10),
+//             _buildField(_instagramController, "Instagram URL"),
+//             const SizedBox(height: 10),
+//             _buildField(_tiktokController, "TikTok URL"),
+//             const SizedBox(height: 10),
+//             _buildField(_youtubeController, "YouTube URL"),
+//             const SizedBox(height: 20),
+//             SizedBox(
+//               width: double.infinity,
+//               child: ElevatedButton(
+//                 onPressed: _saveProfile,
+//                 child: const Text("Save Profile"),
+//               ),
+//             )
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../providers/influencer_provider.dart';
+import '../../models/influencer_model.dart';
+
+class EditInfluencerProfile extends StatefulWidget {
   const EditInfluencerProfile({super.key});
 
   @override
+  State<EditInfluencerProfile> createState() => _EditInfluencerProfileState();
+}
+
+class _EditInfluencerProfileState extends State<EditInfluencerProfile> {
+  final _nameController = TextEditingController();
+  final _bioController = TextEditingController();
+  final _nicheController = TextEditingController();
+  final _followersController = TextEditingController();
+  final _engagementController = TextEditingController();
+  final _instagramController = TextEditingController();
+  final _tiktokController = TextEditingController();
+  final _youtubeController = TextEditingController();
+
+  Uint8List? _newProfileImage;
+
+  @override
+  void initState() {
+    super.initState();
+    final influencer = context.read<InfluencerProvider>().influencer;
+    if (influencer != null) {
+      _nameController.text = influencer.name ?? '';
+      _bioController.text = influencer.bio ?? '';
+      _nicheController.text = influencer.niche ?? '';
+      _followersController.text = influencer.followerCount?.toString() ?? '';
+      _engagementController.text = influencer.engagementRate?.toString() ?? '';
+      _instagramController.text = influencer.instagramUrl ?? '';
+      _tiktokController.text = influencer.tiktokUrl ?? '';
+      _youtubeController.text = influencer.youtubeUrl ?? '';
+    }
+  }
+
+  Future<void> _pickImage() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text("Choose from Gallery"),
+              onTap: () async {
+                Navigator.pop(context);
+                await _pickFromSource(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take a Photo"),
+              onTap: () async {
+                Navigator.pop(context);
+                await _pickFromSource(ImageSource.camera);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickFromSource(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final result = await picker.pickImage(source: source, imageQuality: 80);
+      if (result != null) {
+        final bytes = await result.readAsBytes();
+        setState(() => _newProfileImage = bytes);
+
+        // Upload immediately
+        final provider = context.read<InfluencerProvider>();
+        final influencer = provider.influencer;
+        if (influencer != null) {
+          final url = await provider.uploadProfileImage(influencer.id, bytes);
+          if (url != null && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Profile image uploaded successfully!")),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ Image pick/upload error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to upload image.")),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final provider = context.read<InfluencerProvider>();
+    final influencer = provider.influencer;
+    if (influencer == null) return;
+
+    final updated = influencer.copyWith(
+      name: _nameController.text.trim(),
+      bio: _bioController.text.trim(),
+      niche: _nicheController.text.trim(),
+      followerCount: int.tryParse(_followersController.text.trim()),
+      engagementRate: double.tryParse(_engagementController.text.trim()),
+      instagramUrl: _instagramController.text.trim(),
+      tiktokUrl: _tiktokController.text.trim(),
+      youtubeUrl: _youtubeController.text.trim(),
+    );
+
+    await provider.updateInfluencer(updated);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile saved successfully!")),
+      );
+      Navigator.pop(context);
+    }
+  }
+
+  Widget _buildField(TextEditingController controller, String label,
+      {TextInputType keyboard = TextInputType.text}) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboard,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final user = context.read<AuthProvider>().currentUser!;
-    final service = InfluencerService();
-    final nameCtrl = TextEditingController();
-    final bioCtrl = TextEditingController();
-    final nicheCtrl = TextEditingController();
+    final influencer = context.watch<InfluencerProvider>().influencer;
+    final profileImage = _newProfileImage != null
+        ? MemoryImage(_newProfileImage!)
+        : (influencer?.profileImage != null
+            ? NetworkImage(influencer!.profileImage!)
+            : null);
 
     return Scaffold(
       appBar: AppBar(title: const Text("Edit Profile")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(children: [
-          TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: "Name")),
-          TextField(controller: bioCtrl, decoration: const InputDecoration(labelText: "Bio")),
-          TextField(controller: nicheCtrl, decoration: const InputDecoration(labelText: "Niche")),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () async {
-              await service.upsertInfluencer(
-                InfluencerModel(id: user.id, name: nameCtrl.text, bio: bioCtrl.text, niche: nicheCtrl.text),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profile saved")));
-            },
-            child: const Text("Save"),
-          ),
-        ]),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: _pickImage,
+              child: CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.grey[300],
+                backgroundImage: profileImage as ImageProvider<Object>?,
+                child: profileImage == null
+                    ? const Icon(Icons.person, size: 50, color: Colors.white)
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildField(_nameController, "Full Name"),
+            const SizedBox(height: 10),
+            _buildField(_bioController, "Bio"),
+            const SizedBox(height: 10),
+            _buildField(_nicheController, "Niche"),
+            const SizedBox(height: 10),
+            _buildField(_followersController, "Followers",
+                keyboard: TextInputType.number),
+            const SizedBox(height: 10),
+            _buildField(_engagementController, "Engagement Rate (%)",
+                keyboard: TextInputType.number),
+            const SizedBox(height: 10),
+            _buildField(_instagramController, "Instagram URL"),
+            const SizedBox(height: 10),
+            _buildField(_tiktokController, "TikTok URL"),
+            const SizedBox(height: 10),
+            _buildField(_youtubeController, "YouTube URL"),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saveProfile,
+                child: const Text("Save Profile"),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

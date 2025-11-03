@@ -49,8 +49,7 @@
 // }
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:influencer_marketplace_application/screens/auth/brand_dashboard.dart';
-import 'package:influencer_marketplace_application/screens/auth/influencer_dashboard.dart';
+import 'package:influencer_marketplace_application/screens/Brand/dashboard/brand_dashboard.dart';
 import 'package:influencer_marketplace_application/screens/influencer/influencer_dashboard.dart';
 import 'package:provider/provider.dart';
 import 'package:influencer_marketplace_application/providers/auth_provider.dart';
@@ -94,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (user.role == 'influencer') {
         nextScreen = const InfluencerDashboard();
       } else if (user.role == 'brand') {
-        nextScreen = const BrandDashboardScreen();
+        nextScreen = const BrandDashboard();
       } else {
         nextScreen = const LoginScreen();
       }

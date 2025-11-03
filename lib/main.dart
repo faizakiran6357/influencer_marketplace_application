@@ -125,6 +125,7 @@
 //   }
 // }
 import 'package:flutter/material.dart';
+import 'package:influencer_marketplace_application/providers/brand_provider.dart';
 import 'package:influencer_marketplace_application/screens/auth/ResetPasswordScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -163,7 +164,8 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => InfluencerProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()), // 🌓 Add theme provider
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => BrandProvider()), // 🌓 Add theme provider
       ],
       child: const InfluencerApp(),
     ),

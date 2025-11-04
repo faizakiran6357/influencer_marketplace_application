@@ -1,3 +1,4 @@
+
 // // lib/models/chat_model.dart
 // import 'package:flutter/foundation.dart';
 
@@ -9,39 +10,9 @@
 //   final String? lastMessageText;
 //   final DateTime? lastMessageAt;
 
-//   ChatModel({
-//     required this.id,
-//     this.campaignId,
-//     this.title,
-//     this.isGroup = false,
-//     this.lastMessageText,
-//     this.lastMessageAt,
-//   });
-
-//   factory ChatModel.fromMap(Map<String, dynamic> m) {
-//     return ChatModel(
-//       id: m['id'] as String,
-//       campaignId: m['campaign_id'] as String?,
-//       title: m['title'] as String?,
-//       isGroup: (m['is_group'] as bool?) ?? false,
-//       lastMessageText: m['last_message_text'] as String?,
-//       lastMessageAt: m['last_message_at'] != null ? DateTime.parse(m['last_message_at'] as String) : null,
-//     );
-//   }
-// }
-// lib/models/chat_model.dart
-// import 'package:flutter/foundation.dart';
-
-// class ChatModel {
-//   final String id;
-//   final String? campaignId;
-//   final String? title;
-//   final bool isGroup;
-//   final String? lastMessageText;
-//   final DateTime? lastMessageAt;
-
-//   // ✅ Add influencer name
+//   // ✅ Add influencer info
 //   final String? influencerName;
+//   final String? influencerProfileUrl;
 
 //   ChatModel({
 //     required this.id,
@@ -50,7 +21,8 @@
 //     this.isGroup = false,
 //     this.lastMessageText,
 //     this.lastMessageAt,
-//     this.influencerName, // new field
+//     this.influencerName,        // new field
+//     this.influencerProfileUrl,  // new field
 //   });
 
 //   factory ChatModel.fromMap(Map<String, dynamic> m) {
@@ -63,12 +35,11 @@
 //       lastMessageAt: m['last_message_at'] != null
 //           ? DateTime.parse(m['last_message_at'] as String)
 //           : null,
-//       influencerName: m['influencer_name'] as String?, // map from API/RPC
+//       influencerName: m['influencer_name'] as String?,          // map from API/RPC
+//       influencerProfileUrl: m['influencer_profile_url'] as String?, // map from API/RPC
 //     );
 //   }
 // }
-// import 'package:flutter/foundation.dart';
-
 // class ChatModel {
 //   final String id;
 //   final String? campaignId;
@@ -77,9 +48,9 @@
 //   final String? lastMessageText;
 //   final DateTime? lastMessageAt;
 
-//   // Participant info for AppBar
-//   final String participantName;
-//   final String participantProfileUrl;
+//   // ✅ Generic partner info
+//   final String? partnerName;
+//   final String? partnerProfileUrl;
 
 //   ChatModel({
 //     required this.id,
@@ -88,17 +59,11 @@
 //     this.isGroup = false,
 //     this.lastMessageText,
 //     this.lastMessageAt,
-//     required this.participantName,       // make required
-//     required this.participantProfileUrl, // make required
+//     this.partnerName,
+//     this.partnerProfileUrl,
 //   });
 
 //   factory ChatModel.fromMap(Map<String, dynamic> m) {
-//     // Fetch participant info from joined user data
-//     // Adjust keys depending on your Supabase join structure
-//     final user = m['user'] ?? {};
-//     final name = user['full_name'] ?? 'User';
-//     final avatar = user['avatar_url'] ?? '';
-
 //     return ChatModel(
 //       id: m['id'] as String,
 //       campaignId: m['campaign_id'] as String?,
@@ -108,12 +73,11 @@
 //       lastMessageAt: m['last_message_at'] != null
 //           ? DateTime.parse(m['last_message_at'] as String)
 //           : null,
-//       participantName: name,
-//       participantProfileUrl: avatar,
+//       partnerName: m['partner_name'] as String?,
+//       partnerProfileUrl: m['partner_profile_url'] as String?,
 //     );
 //   }
 // }
-// lib/models/chat_model.dart
 import 'package:flutter/foundation.dart';
 
 class ChatModel {
@@ -124,9 +88,9 @@ class ChatModel {
   final String? lastMessageText;
   final DateTime? lastMessageAt;
 
-  // ✅ Add influencer info
-  final String? influencerName;
-  final String? influencerProfileUrl;
+  // ✅ Unified partner info (works for both brand and influencer)
+  final String? partnerName;
+  final String? partnerProfileUrl;
 
   ChatModel({
     required this.id,
@@ -135,8 +99,8 @@ class ChatModel {
     this.isGroup = false,
     this.lastMessageText,
     this.lastMessageAt,
-    this.influencerName,        // new field
-    this.influencerProfileUrl,  // new field
+    this.partnerName,
+    this.partnerProfileUrl,
   });
 
   factory ChatModel.fromMap(Map<String, dynamic> m) {
@@ -149,8 +113,8 @@ class ChatModel {
       lastMessageAt: m['last_message_at'] != null
           ? DateTime.parse(m['last_message_at'] as String)
           : null,
-      influencerName: m['influencer_name'] as String?,          // map from API/RPC
-      influencerProfileUrl: m['influencer_profile_url'] as String?, // map from API/RPC
+      partnerName: m['partner_name'] as String?,         // new unified field
+      partnerProfileUrl: m['partner_profile_url'] as String?, // new unified field
     );
   }
 }

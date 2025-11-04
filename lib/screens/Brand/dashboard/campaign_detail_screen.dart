@@ -1397,6 +1397,234 @@
 //   }
 // }
 // corect//
+// import 'package:flutter/material.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
+// import '../../../models/campaign_model.dart';
+// import '../../../services/compaign_service.dart';
+// import '../../../services/chat_service.dart';
+// import '../../brand/brand_chat_screen.dart';
+// import '../../../utils/app_theme.dart';
+// import 'compaign_edit_screen.dart';
+
+// class CampaignDetailScreen extends StatefulWidget {
+//   final CampaignModel campaign;
+//   const CampaignDetailScreen({super.key, required this.campaign});
+
+//   @override
+//   State<CampaignDetailScreen> createState() => _CampaignDetailScreenState();
+// }
+
+// class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
+//   final CampaignService _service = CampaignService();
+//   final ChatService _chatService = ChatService();
+//   final SupabaseClient _client = Supabase.instance.client;
+
+//   bool _isLoading = false;
+//   bool _loadingInfluencers = true;
+//   List<Map<String, dynamic>> _acceptedInfluencers = [];
+//   late CampaignModel campaign;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     campaign = widget.campaign;
+//     _fetchAcceptedInfluencers();
+//   }
+
+//   Future<void> _fetchAcceptedInfluencers() async {
+//     setState(() => _loadingInfluencers = true);
+
+//     try {
+//       final res = await _client.rpc(
+//         'get_accepted_influencers',
+//         params: {'camp_id': campaign.id},
+//       );
+
+//       setState(() {
+//         _acceptedInfluencers = List<Map<String, dynamic>>.from(res);
+//         _loadingInfluencers = false;
+//       });
+
+//       debugPrint('✅ Accepted influencers fetched: $_acceptedInfluencers');
+//     } catch (e) {
+//       debugPrint('❌ Error loading influencers: $e');
+//       setState(() => _loadingInfluencers = false);
+//     }
+//   }
+
+//   Future<void> _activateCampaign() async {
+//     setState(() => _isLoading = true);
+//     try {
+//       final updated = campaign.copyWith(status: 'active');
+//       await _service.updateCampaign(updated);
+//       setState(() => campaign = updated);
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text('✅ Campaign activated successfully')),
+//       );
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('❌ Failed to activate campaign: $e')),
+//       );
+//     } finally {
+//       setState(() => _isLoading = false);
+//     }
+//   }
+
+//   /// Open chat safely after build
+//   Future<void> _openChatWithInfluencer(Map<String, dynamic> influencer) async {
+//     final brandId = _client.auth.currentUser?.id;
+//     if (brandId == null) return;
+
+//     final influencerId = influencer['influencer_id'] ?? '';
+//     if (influencerId.isEmpty) return;
+
+//     try {
+//       final chat = await _chatService.getOrCreateChatForCampaign(
+//         campaignId: campaign.id,
+//         brandId: brandId,
+//         influencerId: influencerId,
+//       );
+
+//       if (chat != null && mounted) {
+//         final participantName = influencer['name'] ?? 'User';
+//         final participantProfileUrl = influencer['profile_image'] ?? '';
+
+//         WidgetsBinding.instance.addPostFrameCallback((_) {
+//           if (!mounted) return;
+//           Navigator.push(
+//             context,
+//             MaterialPageRoute(
+//               builder: (_) => BrandChatScreen(
+//                 chatId: chat.id,
+//                 participantName: participantName,
+//                 participantProfileUrl: participantProfileUrl,
+//               ),
+//             ),
+//           );
+//         });
+//       } else {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text('Failed to open chat. Try again.')),
+//         );
+//       }
+//     } catch (e) {
+//       debugPrint('openChatWithInfluencer error: $e');
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isDraft = campaign.status.toLowerCase() == 'draft';
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(campaign.title),
+//         backgroundColor: AppTheme.primaryColor,
+//         actions: [
+//           IconButton(
+//             icon: const Icon(Icons.edit),
+//             onPressed: () async {
+//               await Navigator.push(
+//                 context,
+//                 MaterialPageRoute(
+//                   builder: (_) => CampaignEditScreen(campaign: campaign),
+//                 ),
+//               );
+//               setState(() {});
+//             },
+//           ),
+//         ],
+//       ),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text(campaign.description, style: const TextStyle(fontSize: 16)),
+//             const SizedBox(height: 10),
+//             Text("💰 Budget: \$${campaign.budget}", style: const TextStyle(fontSize: 16)),
+//             Text("💸 Spent: \$${campaign.spent}", style: const TextStyle(fontSize: 16)),
+//             Text("📊 Status: ${campaign.status}", style: const TextStyle(fontSize: 16)),
+//             const SizedBox(height: 20),
+
+//             if (isDraft)
+//               Center(
+//                 child: ElevatedButton.icon(
+//                   onPressed: _isLoading ? null : _activateCampaign,
+//                   icon: _isLoading
+//                       ? const SizedBox(
+//                           width: 18,
+//                           height: 18,
+//                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+//                         )
+//                       : const Icon(Icons.campaign),
+//                   label: const Text("Activate Campaign"),
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: AppTheme.primaryColor,
+//                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+//                   ),
+//                 ),
+//               )
+//             else
+//               const Center(
+//                 child: Text(
+//                   "✅ This campaign is active and visible to influencers.",
+//                   style: TextStyle(color: Colors.green, fontSize: 14),
+//                   textAlign: TextAlign.center,
+//                 ),
+//               ),
+
+//             const SizedBox(height: 24),
+//             const Divider(),
+
+//             Text(
+//               "Accepted Influencers",
+//               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+//             ),
+//             const SizedBox(height: 12),
+
+//             if (_loadingInfluencers)
+//               const Center(child: CircularProgressIndicator())
+//             else if (_acceptedInfluencers.isEmpty)
+//               const Center(child: Text("No influencers have accepted this campaign yet."))
+//             else
+//               Column(
+//                 children: _acceptedInfluencers.map((inf) {
+//                   final name = inf['name'] ?? 'Unknown';
+//                   final email = inf['email'] ?? '';
+//                   final image = inf['profile_image'] ?? '';
+
+//                   return Card(
+//                     margin: const EdgeInsets.symmetric(vertical: 8),
+//                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                     child: ListTile(
+//                       leading: CircleAvatar(
+//                         backgroundImage: image.isNotEmpty
+//                             ? NetworkImage(image)
+//                             : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
+//                       ),
+//                       title: Text(name),
+//                       subtitle: Text(email),
+//                       trailing: ElevatedButton.icon(
+//                         icon: const Icon(Icons.chat_bubble_outline, size: 18),
+//                         label: const Text("Chat"),
+//                         style: ElevatedButton.styleFrom(
+//                           backgroundColor: AppTheme.primaryColor,
+//                           foregroundColor: Colors.white,
+//                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+//                         ),
+//                         onPressed: () => _openChatWithInfluencer(inf),
+//                       ),
+//                     ),
+//                   );
+//                 }).toList(),
+//               ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../models/campaign_model.dart';
@@ -1486,8 +1714,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       );
 
       if (chat != null && mounted) {
-        final participantName = influencer['name'] ?? 'User';
-        final participantProfileUrl = influencer['profile_image'] ?? '';
+        // ✅ Correct partner info mapping
+        final partnerName = influencer['name'] ?? 'User';
+        final partnerProfileUrl = influencer['profile_image'] ?? '';
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -1496,8 +1725,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             MaterialPageRoute(
               builder: (_) => BrandChatScreen(
                 chatId: chat.id,
-                participantName: participantName,
-                participantProfileUrl: participantProfileUrl,
+                partnerName: partnerName,
+                partnerProfileUrl: partnerProfileUrl,
               ),
             ),
           );
@@ -1590,20 +1819,20 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             else
               Column(
                 children: _acceptedInfluencers.map((inf) {
-                  final name = inf['name'] ?? 'Unknown';
+                  final partnerName = inf['name'] ?? 'Unknown';
                   final email = inf['email'] ?? '';
-                  final image = inf['profile_image'] ?? '';
+                  final partnerProfileUrl = inf['profile_image'] ?? '';
 
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundImage: image.isNotEmpty
-                            ? NetworkImage(image)
+                        backgroundImage: partnerProfileUrl.isNotEmpty
+                            ? NetworkImage(partnerProfileUrl)
                             : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                       ),
-                      title: Text(name),
+                      title: Text(partnerName),
                       subtitle: Text(email),
                       trailing: ElevatedButton.icon(
                         icon: const Icon(Icons.chat_bubble_outline, size: 18),

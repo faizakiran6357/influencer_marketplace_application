@@ -540,8 +540,6 @@ class _BrandDashboardState extends State<BrandDashboard> {
                     const CampaignListScreen()),
                 _buildCard(context, "Analytics", Icons.bar_chart,
                     const CampaignAnalyticsScreen()),
-                _buildCard(
-                    context, "Messages", Icons.chat, const BrandChatListScreen()), // ✅ New Chat Card
                 _buildCard(context, "Team", Icons.group,
                     const TeamListScreen()),
                 _buildCard(context, "Settings", Icons.settings,

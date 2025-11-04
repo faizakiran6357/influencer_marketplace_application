@@ -1091,10 +1091,6 @@ class _InfluencerDashboardState extends State<InfluencerDashboard> {
                 _buildCard(context, "Earnings", Icons.attach_money,
                     const EarningsScreen(), iconColor, textColor),
 
-                /// ✅ NEW CHAT CARD
-                _buildCard(context, "Messages", Icons.chat,
-                    const InfluencerChatListScreen(), iconColor, textColor),
-
                 _buildCard(context, "Settings", Icons.settings,
                     const SettingsScreen(), iconColor, textColor),
                 _buildCard(context, "Audience Analytics", Icons.bar_chart,

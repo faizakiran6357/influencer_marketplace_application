@@ -925,6 +925,7 @@
 //     }
 //   }
 // }
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/campaign_model.dart';
 
@@ -1089,26 +1090,48 @@ class CampaignService {
     }
   }
 
-  /// ✅ Fetch campaigns accepted by influencer
-  Future<List<Map<String, dynamic>>> fetchAcceptedCampaignsByInfluencer(
-      String influencerId) async {
-    try {
-      final response = await _client
-          .from('campaign_influencers')
-          .select(
-              '*, campaigns!fk_campaign_influencer_campaign(*, profiles!fk_campaigns_brand(name, email))')
-          .eq('influencer_id', influencerId)
-          .eq('status', 'accepted')
-          .order('created_at', ascending: false);
+  /// ✅ Fetch campaigns accepted by influencer }
+  // }
+Future<List<Map<String, dynamic>>> fetchAcceptedCampaignsByInfluencer(
+    String influencerId) async {
+  try {
+    final supabase = Supabase.instance.client;
 
-      final data = (response as List)
-          .map((item) => item['campaigns'] as Map<String, dynamic>)
-          .toList();
+    final response = await supabase
+        .from('campaign_influencers')
+        .select('*, campaigns!fk_campaign_influencer_campaign(*)')
+        .eq('influencer_id', influencerId)
+        .eq('status', 'accepted');
 
-      return data;
-    } catch (e) {
-      print("❌ fetchAcceptedCampaigns error: $e");
-      return [];
+    final data = List<Map<String, dynamic>>.from(response);
+
+    for (var campaign in data) {
+      final campaignData = campaign['campaigns'];
+      if (campaignData != null && campaignData['brand_id'] != null) {
+        // ✅ Fetch brand details from profiles table using correct column names
+        final brandResponse = await supabase
+            .from('profiles')
+            .select('id, name, profile_image') // 👈 use 'name' instead of 'full_name'
+            .eq('id', campaignData['brand_id'])
+            .maybeSingle();
+
+        if (brandResponse != null) {
+          campaign['brand_name'] = brandResponse['name'] ?? 'Unknown';
+          campaign['brand_image'] = brandResponse['profile_image'];
+        } else {
+          campaign['brand_name'] = 'Unknown';
+          campaign['brand_image'] = null;
+        }
+      }
     }
+
+    debugPrint("✅ ${data.length} accepted campaigns loaded");
+    return data;
+  } catch (e) {
+    debugPrint("❌ fetchAcceptedCampaignsByInfluencer error: $e");
+    return [];
   }
+}
+
+
 }

@@ -849,18 +849,321 @@
 //     );
 //   }
 // }
+// import 'package:flutter/material.dart';
+// import 'package:influencer_marketplace_application/screens/influencer/earnings_screen.dart';
+// import 'package:influencer_marketplace_application/screens/influencer/my_campaigns_screen.dart';
+// import 'package:influencer_marketplace_application/screens/influencer/offers_screen.dart';
+// import 'package:influencer_marketplace_application/screens/influencer/settings_screen.dart';
+// import 'package:influencer_marketplace_application/screens/influencer/influencer_chat_list_screen.dart'; // ✅ new import
+// import 'package:provider/provider.dart';
+// import '../../providers/auth_provider.dart';
+// import '../../providers/influencer_provider.dart';
+// import 'edit_influencer_profile.dart';
+// import 'portfolio_screen.dart';
+// import 'audience_analytics_screen.dart';
+
+// class InfluencerDashboard extends StatefulWidget {
+//   const InfluencerDashboard({super.key});
+
+//   @override
+//   State<InfluencerDashboard> createState() => _InfluencerDashboardState();
+// }
+
+// class _InfluencerDashboardState extends State<InfluencerDashboard> {
+//   @override
+//   void initState() {
+//     super.initState();
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       final userId = context.read<AuthProvider>().currentUser?.id;
+//       if (userId != null) {
+//         context.read<InfluencerProvider>().fetchInfluencer(userId);
+//       }
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final influencerProvider = context.watch<InfluencerProvider>();
+//     final influencer = influencerProvider.influencer;
+
+//     if (influencer == null) {
+//       return const Scaffold(
+//         body: Center(child: CircularProgressIndicator()),
+//       );
+//     }
+
+//     final isDark = Theme.of(context).brightness == Brightness.dark;
+//     final textColor = isDark ? Colors.white : Colors.black87;
+//     final iconColor = isDark ? Colors.greenAccent : Colors.green;
+
+//     final hasYouTube = influencer.youtubeChannelName?.isNotEmpty == true &&
+//         influencer.youtubeSubscribers != null;
+
+//     return Scaffold(
+//       appBar: AppBar(title: Text("Welcome, ${influencer.name ?? 'Influencer'}")),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           children: [
+//             // =========================
+//             // Influencer Info Card
+//             // =========================
+//             Card(
+//               color: Theme.of(context).cardColor,
+//               elevation: 2,
+//               shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(16)),
+//               child: Padding(
+//                 padding: const EdgeInsets.all(16),
+//                 child: Column(
+//                   children: [
+//                     Row(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         CircleAvatar(
+//                           radius: 40,
+//                           backgroundColor: Colors.grey[300],
+//                           backgroundImage: influencer.profileImage != null
+//                               ? NetworkImage(influencer.profileImage!)
+//                               : null,
+//                           child: influencer.profileImage == null
+//                               ? const Icon(Icons.person,
+//                                   size: 40, color: Colors.white)
+//                               : null,
+//                         ),
+//                         const SizedBox(width: 16),
+//                         Expanded(
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               Text(
+//                                 influencer.name ?? "No Name",
+//                                 style: TextStyle(
+//                                   fontSize: 20,
+//                                   fontWeight: FontWeight.bold,
+//                                   color: textColor,
+//                                 ),
+//                                 maxLines: 1,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                               const SizedBox(height: 4),
+//                               Text(
+//                                 influencer.bio?.isNotEmpty == true
+//                                     ? influencer.bio!
+//                                     : "No bio available",
+//                                 style:
+//                                     TextStyle(color: textColor.withOpacity(0.7)),
+//                                 maxLines: 2,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                               const SizedBox(height: 12),
+//                               SingleChildScrollView(
+//                                 scrollDirection: Axis.horizontal,
+//                                 child: Row(
+//                                   children: [
+//                                     _infoItem(
+//                                         icon: Icons.category,
+//                                         label: "Niche",
+//                                         value: influencer.niche ?? "N/A",
+//                                         color: textColor),
+//                                     const SizedBox(width: 16),
+//                                     _infoItem(
+//                                         icon: Icons.people,
+//                                         label: "Followers",
+//                                         value:
+//                                             "${influencer.followerCount ?? 0}",
+//                                         color: textColor),
+//                                     const SizedBox(width: 16),
+//                                     _infoItem(
+//                                         icon: Icons.trending_up,
+//                                         label: "Engagement",
+//                                         value:
+//                                             "${influencer.engagementRate?.toStringAsFixed(1) ?? 0.0}%",
+//                                         color: textColor),
+//                                   ],
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                         IconButton(
+//                           icon: const Icon(Icons.edit, color: Colors.green),
+//                           tooltip: 'Edit Profile',
+//                           onPressed: () {
+//                             Navigator.push(
+//                               context,
+//                               MaterialPageRoute(
+//                                   builder: (_) => const EditInfluencerProfile()),
+//                             );
+//                           },
+//                         ),
+//                       ],
+//                     ),
+//                     if (hasYouTube) ...[
+//                       const Divider(height: 32),
+//                       Align(
+//                         alignment: Alignment.centerLeft,
+//                         child: Text(
+//                           "YouTube Channel",
+//                           style: TextStyle(
+//                               fontSize: 16,
+//                               fontWeight: FontWeight.bold,
+//                               color: textColor),
+//                         ),
+//                       ),
+//                       const SizedBox(height: 8),
+//                       Row(
+//                         children: [
+//                           CircleAvatar(
+//                             radius: 30,
+//                             backgroundColor: Colors.grey[300],
+//                             backgroundImage:
+//                                 influencer.youtubeChannelThumbnail != null
+//                                     ? NetworkImage(
+//                                         influencer.youtubeChannelThumbnail!)
+//                                     : null,
+//                             child: influencer.youtubeChannelThumbnail == null
+//                                 ? const Icon(Icons.video_library,
+//                                     size: 30, color: Colors.white)
+//                                 : null,
+//                           ),
+//                           const SizedBox(width: 12),
+//                           Expanded(
+//                             child: Column(
+//                               crossAxisAlignment: CrossAxisAlignment.start,
+//                               children: [
+//                                 Text(
+//                                   influencer.youtubeChannelName ??
+//                                       "No Channel Name",
+//                                   style: TextStyle(
+//                                       fontSize: 16,
+//                                       fontWeight: FontWeight.bold,
+//                                       color: textColor),
+//                                 ),
+//                                 const SizedBox(height: 4),
+//                                 Text(
+//                                   "Subscribers: ${influencer.youtubeSubscribers ?? 0}",
+//                                   style: TextStyle(
+//                                       fontSize: 14,
+//                                       color: textColor.withOpacity(0.7)),
+//                                 ),
+//                                 if (influencer.youtubeDescription
+//                                         ?.isNotEmpty ==
+//                                     true)
+//                                   Text(
+//                                     influencer.youtubeDescription!,
+//                                     style: TextStyle(
+//                                         fontSize: 14,
+//                                         color: textColor.withOpacity(0.7)),
+//                                     maxLines: 2,
+//                                     overflow: TextOverflow.ellipsis,
+//                                   ),
+//                               ],
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     ],
+//                   ],
+//                 ),
+//               ),
+//             ),
+
+//             const SizedBox(height: 20),
+
+//             // =========================
+//             // Dashboard Cards
+//             // =========================
+//             GridView.count(
+//               crossAxisCount: 2,
+//               shrinkWrap: true,
+//               physics: const NeverScrollableScrollPhysics(),
+//               crossAxisSpacing: 12,
+//               mainAxisSpacing: 12,
+//               childAspectRatio: 1.0,
+//               children: [
+//                 _buildCard(context, "Portfolio", Icons.photo_library,
+//                     const PortfolioScreen(), iconColor, textColor),
+//                 _buildCard(context, "My Campaigns", Icons.campaign,
+//                     const MyCampaignsScreen(), iconColor, textColor),
+//                 _buildCard(context, "Offers", Icons.local_offer,
+//                     const OffersScreen(), iconColor, textColor),
+//                 _buildCard(context, "Earnings", Icons.attach_money,
+//                     const EarningsScreen(), iconColor, textColor),
+
+//                 _buildCard(context, "Settings", Icons.settings,
+//                     const SettingsScreen(), iconColor, textColor),
+//                 _buildCard(context, "Audience Analytics", Icons.bar_chart,
+//                     const AudienceAnalyticsScreen(), iconColor, textColor),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _infoItem({
+//     required IconData icon,
+//     required String label,
+//     required String value,
+//     required Color color,
+//   }) {
+//     return Column(
+//       children: [
+//         Icon(icon, color: Colors.green, size: 24),
+//         const SizedBox(height: 4),
+//         Text(label,
+//             style: TextStyle(color: color.withOpacity(0.7), fontSize: 12)),
+//         Text(value,
+//             style: TextStyle(
+//                 color: color, fontSize: 14, fontWeight: FontWeight.bold)),
+//       ],
+//     );
+//   }
+
+//   Widget _buildCard(BuildContext context, String title, IconData icon,
+//       Widget page, Color iconColor, Color textColor) {
+//     return GestureDetector(
+//       onTap: () => Navigator.push(
+//           context, MaterialPageRoute(builder: (_) => page)),
+//       child: Card(
+//         elevation: 3,
+//         color: Theme.of(context).cardColor,
+//         shadowColor: Theme.of(context).shadowColor.withOpacity(0.3),
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             Icon(icon, size: 40, color: iconColor),
+//             const SizedBox(height: 10),
+//             Text(
+//               title,
+//               style: TextStyle(
+//                   fontWeight: FontWeight.w600, color: textColor, fontSize: 14),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 import 'package:flutter/material.dart';
 import 'package:influencer_marketplace_application/screens/influencer/earnings_screen.dart';
 import 'package:influencer_marketplace_application/screens/influencer/my_campaigns_screen.dart';
 import 'package:influencer_marketplace_application/screens/influencer/offers_screen.dart';
 import 'package:influencer_marketplace_application/screens/influencer/settings_screen.dart';
-import 'package:influencer_marketplace_application/screens/influencer/influencer_chat_list_screen.dart'; // ✅ new import
+import 'package:influencer_marketplace_application/screens/influencer/influencer_chat_list_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/influencer_provider.dart';
 import 'edit_influencer_profile.dart';
 import 'portfolio_screen.dart';
 import 'audience_analytics_screen.dart';
+
+// 🔔 Import NotificationService
+import '../../services/notification_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class InfluencerDashboard extends StatefulWidget {
   const InfluencerDashboard({super.key});
@@ -873,10 +1176,50 @@ class _InfluencerDashboardState extends State<InfluencerDashboard> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = context.read<AuthProvider>().currentUser?.id;
       if (userId != null) {
-        context.read<InfluencerProvider>().fetchInfluencer(userId);
+        // Fetch influencer data
+        await context.read<InfluencerProvider>().fetchInfluencer(userId);
+
+        // ✅ Send Welcome Back notification
+        final userData = await Supabase.instance.client
+            .from('profiles')
+            .select('fcm_token')
+            .eq('id', userId)
+            .maybeSingle();
+
+        final token = userData?['fcm_token'];
+        if (token != null) {
+          await NotificationService.sendPushMessage(
+            targetToken: token,
+            title: 'Welcome Back!',
+            body:
+                'Hello ${context.read<InfluencerProvider>().influencer?.name ?? 'Influencer'}',
+          );
+        }
+
+        // ✅ Listen for new notifications from Supabase
+        _listenForNotifications(userId);
+      }
+    });
+  }
+
+  // Realtime listener for notifications table
+  void _listenForNotifications(String userId) {
+    Supabase.instance.client
+        .from('notifications:recipient_id=eq.$userId')
+        .stream(primaryKey: ['id'])
+        .listen((event) async {
+      for (final notification in event) {
+        final token = notification['fcm_token'];
+        if (token != null) {
+          await NotificationService.sendPushMessage(
+            targetToken: token,
+            title: notification['title'] ?? 'New Notification',
+            body: notification['body'] ?? '',
+          );
+        }
       }
     });
   }
@@ -894,7 +1237,7 @@ class _InfluencerDashboardState extends State<InfluencerDashboard> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final iconColor = isDark ? Colors.greenAccent : Colors.green;
+    final iconColor = isDark ? Colors.greenAccent :Color(0xFFB25640);
 
     final hasYouTube = influencer.youtubeChannelName?.isNotEmpty == true &&
         influencer.youtubeSubscribers != null;
@@ -987,7 +1330,7 @@ class _InfluencerDashboardState extends State<InfluencerDashboard> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.green),
+                          icon: const Icon(Icons.edit, color: Color(0xFFB25640)),
                           tooltip: 'Edit Profile',
                           onPressed: () {
                             Navigator.push(
@@ -1090,7 +1433,6 @@ class _InfluencerDashboardState extends State<InfluencerDashboard> {
                     const OffersScreen(), iconColor, textColor),
                 _buildCard(context, "Earnings", Icons.attach_money,
                     const EarningsScreen(), iconColor, textColor),
-
                 _buildCard(context, "Settings", Icons.settings,
                     const SettingsScreen(), iconColor, textColor),
                 _buildCard(context, "Audience Analytics", Icons.bar_chart,
@@ -1111,7 +1453,7 @@ class _InfluencerDashboardState extends State<InfluencerDashboard> {
   }) {
     return Column(
       children: [
-        Icon(icon, color: Colors.green, size: 24),
+        Icon(icon, color: Color(0xFFB25640), size: 24),
         const SizedBox(height: 4),
         Text(label,
             style: TextStyle(color: color.withOpacity(0.7), fontSize: 12)),

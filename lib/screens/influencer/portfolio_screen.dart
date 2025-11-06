@@ -190,7 +190,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           child: Wrap(
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.green),
+                leading: const Icon(Icons.camera_alt, color: Color(0xFFB25640)),
                 title: const Text('Take a Photo'),
                 onTap: () {
                   Navigator.pop(context);
@@ -231,10 +231,10 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("My Portfolio"),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFB25640),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFB25640),
         onPressed: _showImageSourceDialog,
         child: const Icon(Icons.add_a_photo),
       ),

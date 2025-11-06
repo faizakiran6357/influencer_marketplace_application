@@ -890,6 +890,291 @@
 //     );
 //   }
 // }
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
+// import '../../providers/chat_provider.dart';
+// import '../../models/message_model.dart';
+// import '../../widgets/message_input.dart';
+// import '../../utils/app_theme.dart';
+
+// class BrandChatScreen extends StatefulWidget {
+//   final String chatId;
+//   final String partnerName;
+//   final String partnerProfileUrl;
+
+//   const BrandChatScreen({
+//     Key? key,
+//     required this.chatId,
+//     required this.partnerName,
+//     required this.partnerProfileUrl,
+//   }) : super(key: key);
+
+//   @override
+//   State<BrandChatScreen> createState() => _BrandChatScreenState();
+// }
+
+// class _BrandChatScreenState extends State<BrandChatScreen> {
+//   late ChatProvider cp;
+//   final ScrollController _sc = ScrollController();
+//   final List<String> reactionsList = ['👍', '❤️', '😂', '😮', '😢', '👏'];
+//   final Set<String> sendingImageIds = {};
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     cp = Provider.of<ChatProvider>(context, listen: false);
+
+//     WidgetsBinding.instance.addPostFrameCallback((_) async {
+//       if (!mounted) return;
+//       await cp.loadMessages(widget.chatId);
+//       cp.markAllRead(widget.chatId);
+//       _scrollToBottom();
+//     });
+//   }
+
+//   void _scrollToBottom() {
+//     Future.delayed(const Duration(milliseconds: 200), () {
+//       if (_sc.hasClients) _sc.jumpTo(_sc.position.maxScrollExtent);
+//     });
+//   }
+
+//   Future<void> _onSendText(String text) async {
+//     if (text.trim().isEmpty) return;
+//     await cp.sendText(widget.chatId, text);
+//     _scrollToBottom();
+//   }
+
+//   Future<void> _onSendImage(File image) async {
+//     final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+//     sendingImageIds.add(tempId);
+//     setState(() {});
+
+//     await cp.sendImage(widget.chatId, image);
+
+//     sendingImageIds.remove(tempId);
+//     setState(() {});
+//     _scrollToBottom();
+//   }
+
+//   void _showMessageOptions(MessageModel msg) {
+//     showModalBottomSheet(
+//       context: context,
+//       builder: (_) => SizedBox(
+//         height: 180,
+//         child: Column(
+//           children: [
+//             ListTile(
+//               leading: const Icon(Icons.edit),
+//               title: const Text('Edit'),
+//               onTap: () {
+//                 Navigator.pop(context);
+//                 _showEditDialog(msg);
+//               },
+//             ),
+//             ListTile(
+//               leading: const Icon(Icons.delete),
+//               title: const Text('Delete'),
+//               onTap: () {
+//                 Navigator.pop(context);
+//                 cp.deleteMessage(msg);
+//               },
+//             ),
+//             ListTile(
+//               leading: const Icon(Icons.emoji_emotions),
+//               title: const Text('React'),
+//               onTap: () {
+//                 Navigator.pop(context);
+//                 _showReactions(msg);
+//               },
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _showEditDialog(MessageModel msg) {
+//     final controller = TextEditingController(text: msg.text);
+//     showDialog(
+//       context: context,
+//       builder: (_) => AlertDialog(
+//         title: const Text('Edit Message'),
+//         content: TextField(controller: controller),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.pop(context),
+//             child: const Text('Cancel'),
+//           ),
+//           TextButton(
+//             onPressed: () {
+//               cp.editMessage(msg, controller.text.trim());
+//               Navigator.pop(context);
+//             },
+//             child: const Text('Save'),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   void _showReactions(MessageModel msg) {
+//     showModalBottomSheet(
+//       context: context,
+//       builder: (_) => SizedBox(
+//         height: 80,
+//         child: GridView.builder(
+//           scrollDirection: Axis.horizontal,
+//           padding: const EdgeInsets.all(8),
+//           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+//             crossAxisCount: 1,
+//             mainAxisSpacing: 10,
+//           ),
+//           itemCount: reactionsList.length,
+//           itemBuilder: (_, index) {
+//             final emoji = reactionsList[index];
+//             return GestureDetector(
+//               onTap: () {
+//                 cp.addReaction(msg, emoji);
+//                 Navigator.pop(context);
+//               },
+//               child: CircleAvatar(
+//                 radius: 25,
+//                 child: Text(emoji, style: const TextStyle(fontSize: 24)),
+//               ),
+//             );
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildMessageBubble(MessageModel msg, bool isMine) {
+//     final user = Supabase.instance.client.auth.currentUser;
+
+//     return GestureDetector(
+//       onLongPress: () => _showMessageOptions(msg),
+//       child: Container(
+//         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//         alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+//         child: Column(
+//           crossAxisAlignment:
+//               isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+//           children: [
+//             Container(
+//               constraints: const BoxConstraints(maxWidth: 250, maxHeight: 250),
+//               padding: msg.type == 'text'
+//                   ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+//                   : EdgeInsets.zero,
+//               decoration: BoxDecoration(
+//                 color: isMine ? AppTheme.primaryColor : Colors.grey.shade300,
+//                 borderRadius: BorderRadius.circular(16),
+//               ),
+//               child: msg.type == 'text'
+//                   ? Text(
+//                       msg.text,
+//                       style: TextStyle(
+//                         color: isMine ? Colors.white : Colors.black,
+//                       ),
+//                     )
+//                   : Stack(
+//                       alignment: Alignment.center,
+//                       children: [
+//                         ClipRRect(
+//                           borderRadius: BorderRadius.circular(12),
+//                           child: Image.network(
+//                             msg.attachmentUrl ?? '',
+//                             fit: BoxFit.cover,
+//                             width: 200,
+//                             height: 200,
+//                           ),
+//                         ),
+//                         if (sendingImageIds.contains(msg.id))
+//                           Container(
+//                             width: 200,
+//                             height: 200,
+//                             color: Colors.black38,
+//                             child: const Center(
+//                               child: CircularProgressIndicator(
+//                                 color: Colors.white,
+//                               ),
+//                             ),
+//                           ),
+//                       ],
+//                     ),
+//             ),
+//             if (msg.reactions.isNotEmpty)
+//               Padding(
+//                 padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
+//                 child: Wrap(
+//                   spacing: 4,
+//                   children: msg.reactions
+//                       .map((r) => Text(r, style: const TextStyle(fontSize: 16)))
+//                       .toList(),
+//                 ),
+//               ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final user = Supabase.instance.client.auth.currentUser;
+//     return Scaffold(
+//       appBar: AppBar(
+//         backgroundColor: AppTheme.primaryColor,
+//         titleSpacing: 0,
+//         title: Row(
+//           children: [
+//             const SizedBox(width: 8),
+//             CircleAvatar(
+//               radius: 20,
+//               backgroundImage: widget.partnerProfileUrl.isNotEmpty
+//                   ? NetworkImage(widget.partnerProfileUrl)
+//                   : null,
+//               child: widget.partnerProfileUrl.isEmpty
+//                   ? const Icon(Icons.person)
+//                   : null,
+//             ),
+//             const SizedBox(width: 12),
+//             Text(
+//               widget.partnerName,
+//               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+//             ),
+//           ],
+//         ),
+//       ),
+//       body: Column(
+//         children: [
+//           Expanded(
+//             child: Consumer<ChatProvider>(
+//               builder: (context, cp, _) {
+//                 final msgs = cp.messages[widget.chatId] ?? [];
+//                 if (cp.loadingMessages[widget.chatId] == true && msgs.isEmpty) {
+//                   return const Center(child: CircularProgressIndicator());
+//                 }
+//                 return ListView.builder(
+//                   controller: _sc,
+//                   padding: const EdgeInsets.symmetric(vertical: 12),
+//                   itemCount: msgs.length,
+//                   itemBuilder: (context, i) {
+//                     final m = msgs[i];
+//                     final isMine = user != null && m.senderId == user.id;
+//                     return _buildMessageBubble(m, isMine);
+//                   },
+//                 );
+//               },
+//             ),
+//           ),
+//           MessageInput(onSendText: _onSendText, onSendImage: _onSendImage),
+//         ],
+//       ),
+//     );
+//   }
+// }
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -942,7 +1227,25 @@ class _BrandChatScreenState extends State<BrandChatScreen> {
 
   Future<void> _onSendText(String text) async {
     if (text.trim().isEmpty) return;
-    await cp.sendText(widget.chatId, text);
+
+    // Get partner id
+    final participants = await Supabase.instance.client
+        .from('chat_participants')
+        .select('user_id')
+        .eq('chat_id', widget.chatId);
+
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    String? partnerId;
+    if (participants != null) {
+      for (final p in (participants as List)) {
+        if (p['user_id'] != currentUserId) {
+          partnerId = p['user_id'];
+          break;
+        }
+      }
+    }
+
+    await cp.sendText(widget.chatId, text, receiverId: partnerId);
     _scrollToBottom();
   }
 
@@ -951,7 +1254,24 @@ class _BrandChatScreenState extends State<BrandChatScreen> {
     sendingImageIds.add(tempId);
     setState(() {});
 
-    await cp.sendImage(widget.chatId, image);
+    // Get partner id
+    final participants = await Supabase.instance.client
+        .from('chat_participants')
+        .select('user_id')
+        .eq('chat_id', widget.chatId);
+
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    String? partnerId;
+    if (participants != null) {
+      for (final p in (participants as List)) {
+        if (p['user_id'] != currentUserId) {
+          partnerId = p['user_id'];
+          break;
+        }
+      }
+    }
+
+    await cp.sendImage(widget.chatId, image, receiverId: partnerId);
 
     sendingImageIds.remove(tempId);
     setState(() {});

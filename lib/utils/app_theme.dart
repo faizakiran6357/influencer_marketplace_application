@@ -136,7 +136,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF00C853); // Fresh Green
+  static const Color primaryColor = Color(0xFFB25640); // Fresh Green
   static const Color secondaryColor = Color(0xFF1B5E20);
   static const Color backgroundColor = Color(0xFFF8F9FA);
   static const Color textColor = Color(0xFF212121);
@@ -191,7 +191,7 @@ class AppTheme {
       secondary: secondaryColor,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF1B5E20),
+      backgroundColor: Color(0xFFB25640),
       foregroundColor: Colors.white,
       elevation: 0,
     ),

@@ -653,4 +653,19 @@ class BrandProvider with ChangeNotifier {
       return {'totalBudget': 0, 'totalSpent': 0, 'remaining': 0};
     }
   }
+  Future<void> deleteCampaign(String campaignId) async {
+  try {
+    await Supabase.instance.client
+        .from('campaigns')
+        .delete()
+        .eq('id', campaignId);
+
+    campaigns.removeWhere((c) => c.id == campaignId);
+    notifyListeners();
+  } catch (e) {
+    debugPrint('❌ deleteCampaign error: $e');
+    rethrow;
+  }
+}
+
 }

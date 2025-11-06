@@ -59,10 +59,108 @@
 //     );
 //   }
 // }
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import '../../../providers/brand_provider.dart';
+// import '../../../models/campaign_model.dart';
+
+// class CampaignCreateScreen extends StatefulWidget {
+//   const CampaignCreateScreen({super.key});
+
+//   @override
+//   State<CampaignCreateScreen> createState() => _CampaignCreateScreenState();
+// }
+
+// class _CampaignCreateScreenState extends State<CampaignCreateScreen> {
+//   final _formKey = GlobalKey<FormState>();
+//   final _titleController = TextEditingController();
+//   final _descController = TextEditingController();
+//   final _budgetController = TextEditingController();
+//   bool _loading = false;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final provider = context.read<BrandProvider>();
+//     final brandId = provider.brand?.id;
+
+//     return Scaffold(
+//       appBar: AppBar(title: const Text("Create Campaign")),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16),
+//         child: Form(
+//           key: _formKey,
+//           child: Column(
+//             children: [
+//               TextFormField(
+//                 controller: _titleController,
+//                 decoration: const InputDecoration(labelText: "Title"),
+//                 validator: (v) =>
+//                     v == null || v.isEmpty ? "Title is required" : null,
+//               ),
+//               const SizedBox(height: 10),
+//               TextFormField(
+//                 controller: _descController,
+//                 decoration: const InputDecoration(labelText: "Description"),
+//                 validator: (v) =>
+//                     v == null || v.isEmpty ? "Description is required" : null,
+//               ),
+//               const SizedBox(height: 10),
+//               TextFormField(
+//                 controller: _budgetController,
+//                 decoration: const InputDecoration(labelText: "Budget"),
+//                 keyboardType: TextInputType.number,
+//                 validator: (v) => v == null || double.tryParse(v) == null
+//                     ? "Enter valid number"
+//                     : null,
+//               ),
+//               const SizedBox(height: 25),
+//               _loading
+//                   ? const CircularProgressIndicator()
+//                   : ElevatedButton.icon(
+//                       icon: const Icon(Icons.check),
+//                       label: const Text("Create Campaign"),
+//                       onPressed: () async {
+//                         if (!_formKey.currentState!.validate() || brandId == null) {
+//                           ScaffoldMessenger.of(context).showSnackBar(
+//                             const SnackBar(
+//                                 content: Text("Please fill all fields correctly")),
+//                           );
+//                           return;
+//                         }
+
+//                         setState(() => _loading = true);
+
+//                         final campaign = CampaignModel(
+//                           id: DateTime.now()
+//                               .millisecondsSinceEpoch
+//                               .toString(),
+//                           brandId: brandId,
+//                           title: _titleController.text.trim(),
+//                           description: _descController.text.trim(),
+//                           budget: double.parse(_budgetController.text.trim()),
+//                           spent: 0,
+//                           status: 'draft',
+//                         );
+
+//                         await provider.createCampaign(campaign);
+
+//                         setState(() => _loading = false);
+//                         if (mounted) Navigator.pop(context);
+//                       },
+//                     ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 import 'package:flutter/material.dart';
+import 'package:influencer_marketplace_application/services/notification_service.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/brand_provider.dart';
 import '../../../models/campaign_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CampaignCreateScreen extends StatefulWidget {
   const CampaignCreateScreen({super.key});
@@ -123,7 +221,8 @@ class _CampaignCreateScreenState extends State<CampaignCreateScreen> {
                         if (!_formKey.currentState!.validate() || brandId == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text("Please fill all fields correctly")),
+                                content: Text(
+                                    "Please fill all fields correctly")),
                           );
                           return;
                         }
@@ -142,7 +241,33 @@ class _CampaignCreateScreenState extends State<CampaignCreateScreen> {
                           status: 'draft',
                         );
 
+                        // 1️⃣ Create campaign in Supabase
                         await provider.createCampaign(campaign);
+
+                        // 2️⃣ Send notification to all influencers
+                        try {
+                          final response = await Supabase.instance.client
+                              .from('profiles')
+                              .select('fcm_token')
+                              .eq('role', 'influencer')
+                              .not('fcm_token', 'is', null)
+                              .select();
+
+                          if (response != null && response is List) {
+                            for (var t in response) {
+                              final token = t['fcm_token'];
+                              if (token != null) {
+                                await NotificationService.sendPushMessage(
+                                  targetToken: token,
+                                  title: 'New Campaign Posted!',
+                                  body: campaign.title,
+                                );
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          print('❌ Error sending campaign notification: $e');
+                        }
 
                         setState(() => _loading = false);
                         if (mounted) Navigator.pop(context);

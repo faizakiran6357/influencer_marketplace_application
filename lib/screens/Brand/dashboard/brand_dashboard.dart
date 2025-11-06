@@ -407,10 +407,178 @@
 //     );
 //   }
 // }
+// import 'package:flutter/material.dart';
+// import 'package:influencer_marketplace_application/screens/Brand/brand_chat_list_screen.dart';
+// import 'package:influencer_marketplace_application/screens/Brand/dashboard/Brand%20Settings%20Screen';
+
+// import 'package:provider/provider.dart';
+// import '../../../providers/auth_provider.dart';
+// import '../../../providers/brand_provider.dart';
+// import '../profile/edit_brand_profile.dart';
+// import 'campaign_list_screen.dart';
+// import '../analytics/campaign_analytics_screen.dart';
+// import '../team/team_list_screen.dart';
+
+
+// class BrandDashboard extends StatefulWidget {
+//   const BrandDashboard({super.key});
+
+//   @override
+//   State<BrandDashboard> createState() => _BrandDashboardState();
+// }
+
+// class _BrandDashboardState extends State<BrandDashboard> {
+//   @override
+//   void initState() {
+//     super.initState();
+
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       final userId = context.read<AuthProvider>().currentUser?.id;
+//       if (userId != null) {
+//         final provider = context.read<BrandProvider>();
+//         provider.fetchBrand(userId);
+//         provider.fetchCampaigns(userId);
+//       }
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final provider = context.watch<BrandProvider>();
+//     final brand = provider.brand;
+
+//     if (provider.loading) {
+//       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+//     }
+
+//     if (brand == null) {
+//       return Scaffold(
+//         appBar: AppBar(title: const Text("Brand Dashboard")),
+//         body: const Center(
+//           child: Text(
+//             "No brand profile found. Please complete your profile setup.",
+//             style: TextStyle(fontSize: 16),
+//           ),
+//         ),
+//       );
+//     }
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text("Welcome, ${brand.name ?? 'Brand'}"),
+//       ),
+//       body: SingleChildScrollView(
+//         child: Column(
+//           children: [
+//             // ✅ Brand Info Card
+//             Card(
+//               margin: const EdgeInsets.all(16),
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(12),
+//               ),
+//               elevation: 3,
+//               child: Padding(
+//                 padding: const EdgeInsets.all(16),
+//                 child: Row(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     CircleAvatar(
+//                       radius: 35,
+//                       backgroundImage: brand.profileImage != null &&
+//                               brand.profileImage!.isNotEmpty
+//                           ? NetworkImage(brand.profileImage!)
+//                           : const AssetImage('assets/images/default_avatar.png')
+//                               as ImageProvider,
+//                     ),
+//                     const SizedBox(width: 16),
+//                     Expanded(
+//                       child: Column(
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         children: [
+//                           Text(brand.name ?? '',
+//                               style: const TextStyle(
+//                                   fontSize: 20, fontWeight: FontWeight.bold)),
+//                           const SizedBox(height: 4),
+//                           Text(brand.website ?? 'No website added',
+//                               style: const TextStyle(color: Colors.blue)),
+//                           const SizedBox(height: 8),
+//                           Text(
+//                             brand.bio ?? 'No bio provided yet.',
+//                             style: const TextStyle(fontSize: 14),
+//                           ),
+//                           const SizedBox(height: 10),
+//                           ElevatedButton.icon(
+//                             onPressed: () {
+//                               Navigator.push(
+//                                 context,
+//                                 MaterialPageRoute(
+//                                   builder: (_) => const EditBrandProfile(),
+//                                 ),
+//                               );
+//                             },
+//                             icon: const Icon(Icons.edit, size: 18),
+//                             label: const Text("Edit Profile"),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+
+//             // ✅ Dashboard Cards
+//             GridView.count(
+//               crossAxisCount: 2,
+//               shrinkWrap: true,
+//               physics: const NeverScrollableScrollPhysics(),
+//               padding: const EdgeInsets.all(16),
+//               crossAxisSpacing: 12,
+//               mainAxisSpacing: 12,
+//               children: [
+//                 _buildCard(context, "Campaigns", Icons.campaign,
+//                     const CampaignListScreen()),
+//                 _buildCard(context, "Analytics", Icons.bar_chart,
+//                     const CampaignAnalyticsScreen()),
+//                 _buildCard(context, "Team", Icons.group,
+//                     const TeamListScreen()),
+//                 _buildCard(context, "Settings", Icons.settings,
+//                     const BrandSettingsScreen()),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildCard(
+//       BuildContext context, String title, IconData icon, Widget page) {
+//     return GestureDetector(
+//       onTap: () =>
+//           Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
+//       child: Card(
+//         elevation: 3,
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//         child: Center(
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Icon(icon, size: 40, color: Colors.green),
+//               const SizedBox(height: 8),
+//               Text(title,
+//                   style: const TextStyle(
+//                       fontSize: 16, fontWeight: FontWeight.w600)),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 import 'package:flutter/material.dart';
 import 'package:influencer_marketplace_application/screens/Brand/brand_chat_list_screen.dart';
 import 'package:influencer_marketplace_application/screens/Brand/dashboard/Brand%20Settings%20Screen';
-
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/brand_provider.dart';
@@ -418,7 +586,8 @@ import '../profile/edit_brand_profile.dart';
 import 'campaign_list_screen.dart';
 import '../analytics/campaign_analytics_screen.dart';
 import '../team/team_list_screen.dart';
-
+import '../../../services/notification_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BrandDashboard extends StatefulWidget {
   const BrandDashboard({super.key});
@@ -432,12 +601,50 @@ class _BrandDashboardState extends State<BrandDashboard> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = context.read<AuthProvider>().currentUser?.id;
       if (userId != null) {
         final provider = context.read<BrandProvider>();
-        provider.fetchBrand(userId);
-        provider.fetchCampaigns(userId);
+        await provider.fetchBrand(userId);
+        await provider.fetchCampaigns(userId);
+
+        // ✅ Send "Welcome Back" notification
+        final userData = await Supabase.instance.client
+            .from('profiles')
+            .select('fcm_token')
+            .eq('id', userId)
+            .maybeSingle();
+
+        final token = userData?['fcm_token'];
+        if (token != null) {
+          await NotificationService.sendPushMessage(
+            targetToken: token,
+            title: 'Welcome Back!',
+            body: 'Hello ${provider.brand?.name ?? 'Brand'}',
+          );
+        }
+
+        // ✅ Setup future notification listener (for campaigns, earnings etc.)
+        _listenForNotifications(userId);
+      }
+    });
+  }
+
+  void _listenForNotifications(String userId) {
+    // Example: listen to notifications table or brand-specific triggers
+    Supabase.instance.client
+        .from('notifications:recipient_id=eq.$userId')
+        .stream(primaryKey: ['id'])
+        .listen((event) async {
+      for (final notification in event) {
+        final token = notification['fcm_token'];
+        if (token != null) {
+          await NotificationService.sendPushMessage(
+            targetToken: token,
+            title: notification['title'] ?? 'New Notification',
+            body: notification['body'] ?? '',
+          );
+        }
       }
     });
   }
@@ -487,7 +694,8 @@ class _BrandDashboardState extends State<BrandDashboard> {
                       backgroundImage: brand.profileImage != null &&
                               brand.profileImage!.isNotEmpty
                           ? NetworkImage(brand.profileImage!)
-                          : const AssetImage('assets/images/default_avatar.png')
+                          : const AssetImage(
+                                  'assets/images/default_avatar.png')
                               as ImageProvider,
                     ),
                     const SizedBox(width: 16),
@@ -536,14 +744,14 @@ class _BrandDashboardState extends State<BrandDashboard> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               children: [
-                _buildCard(context, "Campaigns", Icons.campaign,
-                    const CampaignListScreen()),
+                _buildCard(
+                    context, "Campaigns", Icons.campaign, const CampaignListScreen()),
                 _buildCard(context, "Analytics", Icons.bar_chart,
                     const CampaignAnalyticsScreen()),
-                _buildCard(context, "Team", Icons.group,
-                    const TeamListScreen()),
-                _buildCard(context, "Settings", Icons.settings,
-                    const BrandSettingsScreen()),
+                _buildCard(
+                    context, "Team", Icons.group, const TeamListScreen()),
+                _buildCard(
+                    context, "Settings", Icons.settings, const BrandSettingsScreen()),
               ],
             ),
           ],
@@ -552,11 +760,9 @@ class _BrandDashboardState extends State<BrandDashboard> {
     );
   }
 
-  Widget _buildCard(
-      BuildContext context, String title, IconData icon, Widget page) {
+  Widget _buildCard(BuildContext context, String title, IconData icon, Widget page) {
     return GestureDetector(
-      onTap: () =>
-          Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
       child: Card(
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -564,11 +770,10 @@ class _BrandDashboardState extends State<BrandDashboard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 40, color: Colors.green),
+              Icon(icon, size: 40, color: Color(0xFFB25640)),
               const SizedBox(height: 8),
               Text(title,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ],
           ),
         ),

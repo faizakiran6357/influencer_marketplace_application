@@ -1746,24 +1746,45 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     final isDraft = campaign.status.toLowerCase() == 'draft';
 
     return Scaffold(
+      // appBar: AppBar(
+      //   title: Text(campaign.title),
+      //   backgroundColor: AppTheme.primaryColor,
+      //   actions: [
+      //     IconButton(
+      //       icon: const Icon(Icons.edit),
+      //       onPressed: () async {
+      //         await Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //             builder: (_) => CampaignEditScreen(campaign: campaign),
+      //           ),
+      //         );
+      //         setState(() {});
+      //       },
+      //     ),
+      //   ],
+      // ),
       appBar: AppBar(
-        title: Text(campaign.title),
-        backgroundColor: AppTheme.primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CampaignEditScreen(campaign: campaign),
-                ),
-              );
-              setState(() {});
-            },
-          ),
-        ],
+  title: Text(campaign.title),
+  backgroundColor: AppTheme.primaryColor,
+  actions: [
+    // Show edit button only if campaign is not completed
+    if (campaign.status.toLowerCase() != 'completed')
+      IconButton(
+        icon: const Icon(Icons.edit),
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CampaignEditScreen(campaign: campaign),
+            ),
+          );
+          setState(() {}); // Refresh screen after editing
+        },
       ),
+  ],
+),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

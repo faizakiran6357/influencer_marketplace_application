@@ -10,6 +10,7 @@ import '../services/youtube_service.dart';
 import '../services/compaign_service.dart';
 
 class InfluencerProvider with ChangeNotifier {
+  
   final _service = InfluencerService();
   final _youtubeService = YouTubeService();
   final _campaignService = CampaignService();

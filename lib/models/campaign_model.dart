@@ -1,45 +1,4 @@
-// class CampaignModel {
-//   final String id;
-//   final String brandId;
-//   final String title;
-//   final String description;
-//   final double budget;
-//   final double spent;
-//   final String status;
 
-//   CampaignModel({
-//     required this.id,
-//     required this.brandId,
-//     required this.title,
-//     required this.description,
-//     required this.budget,
-//     required this.spent,
-//     required this.status,
-//   });
-
-//   factory CampaignModel.fromMap(Map<String, dynamic> map) {
-//     return CampaignModel(
-//       id: map['id'],
-//       brandId: map['brand_id'],
-//       title: map['title'] ?? '',
-//       description: map['description'] ?? '',
-//       budget: (map['budget'] ?? 0).toDouble(),
-//       spent: (map['spent'] ?? 0).toDouble(),
-//       status: map['status'] ?? 'draft',
-//     );
-//   }
-
-//   Map<String, dynamic> toMap() {
-//     return {
-//       'brand_id': brandId,
-//       'title': title,
-//       'description': description,
-//       'budget': budget,
-//       'spent': spent,
-//       'status': status,
-//     };
-//   }
-// }
 class CampaignModel {
   final String id; // Supabase UUID (campaign id)
   final String brandId; // References profiles.id of the brand

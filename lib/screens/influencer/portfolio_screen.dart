@@ -1233,10 +1233,779 @@
 //     );
 //   }
 // }
-import 'dart:typed_data';
-import 'dart:io';
+// import 'dart:typed_data';
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:provider/provider.dart';
+// import '../../providers/auth_provider.dart';
+// import '../../providers/influencer_provider.dart';
+// import '../../services/influencer_service.dart';
+
+// class PortfolioScreen extends StatefulWidget {
+//   const PortfolioScreen({super.key});
+
+//   @override
+//   State<PortfolioScreen> createState() => _PortfolioScreenState();
+// }
+
+// class _PortfolioScreenState extends State<PortfolioScreen> {
+//   final ImagePicker _picker = ImagePicker();
+
+//   // ---------- Unified Add/Edit Dialog with Camera/Gallery ----------
+//   Future<Map<String, dynamic>?> _getPortfolioDialog({
+//     String? initialTitle,
+//     String? initialDescription,
+//     String? initialImageUrl,
+//   }) async {
+//     final titleController = TextEditingController(text: initialTitle ?? '');
+//     final descController = TextEditingController(text: initialDescription ?? '');
+//     File? pickedImage;
+
+//     return await showDialog<Map<String, dynamic>>(
+//       context: context,
+//       builder: (context) => StatefulBuilder(
+//         builder: (context, setState) => AlertDialog(
+//           title: Text(initialTitle == null ? 'Add Portfolio Item' : 'Edit Portfolio Item'),
+//           content: SingleChildScrollView(
+//             child: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 // Title field
+//                 TextField(
+//                   controller: titleController,
+//                   decoration: const InputDecoration(labelText: 'Title'),
+//                 ),
+//                 const SizedBox(height: 8),
+//                 // Description field
+//                 TextField(
+//                   controller: descController,
+//                   decoration: const InputDecoration(labelText: 'Description'),
+//                   maxLines: 3,
+//                 ),
+//                 const SizedBox(height: 16),
+//                 // Image picker
+//                 GestureDetector(
+//                   onTap: () {
+//                     showModalBottomSheet(
+//                       context: context,
+//                       builder: (_) => SafeArea(
+//                         child: Wrap(
+//                           children: [
+//                             ListTile(
+//                               leading: const Icon(Icons.camera_alt),
+//                               title: const Text('Take a Photo'),
+//                               onTap: () async {
+//                                 Navigator.pop(context);
+//                                 final XFile? file = await _picker.pickImage(source: ImageSource.camera);
+//                                 if (file != null) {
+//                                   setState(() {
+//                                     pickedImage = File(file.path);
+//                                   });
+//                                 }
+//                               },
+//                             ),
+//                             ListTile(
+//                               leading: const Icon(Icons.photo_library),
+//                               title: const Text('Choose from Gallery'),
+//                               onTap: () async {
+//                                 Navigator.pop(context);
+//                                 final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+//                                 if (file != null) {
+//                                   setState(() {
+//                                     pickedImage = File(file.path);
+//                                   });
+//                                 }
+//                               },
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     );
+//                   },
+//                   child: Container(
+//                     height: 150,
+//                     width: double.infinity,
+//                     color: Colors.grey[300],
+//                     child: pickedImage != null
+//                         ? Image.file(pickedImage!, fit: BoxFit.cover)
+//                         : initialImageUrl != null
+//                             ? Image.network(initialImageUrl, fit: BoxFit.cover)
+//                             : const Center(
+//                                 child: Icon(Icons.add_a_photo, size: 50),
+//                               ),
+//                   ),
+//                 ),
+//                 const SizedBox(height: 8),
+//                 Text(
+//                   pickedImage != null
+//                       ? 'Tap to change image'
+//                       : initialImageUrl != null
+//                           ? 'Tap to change image'
+//                           : 'Tap to add image',
+//                   style: const TextStyle(fontSize: 12, color: Colors.grey),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () => Navigator.pop(context),
+//               child: const Text('Cancel'),
+//             ),
+//             ElevatedButton(
+//               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB25640)),
+//               onPressed: () {
+//                 Navigator.pop(context, {
+//                   'title': titleController.text.trim(),
+//                   'description': descController.text.trim(),
+//                   'imageFile': pickedImage,
+//                 });
+//               },
+//               child: const Text('Save'),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   // ---------- Add or Edit portfolio ----------
+//   Future<void> _addOrEditPortfolio({Map<String, dynamic>? item}) async {
+//     final authProvider = context.read<AuthProvider>();
+//     final userId = authProvider.currentUser?.id;
+//     if (userId == null) return;
+
+//     final result = await _getPortfolioDialog(
+//       initialTitle: item != null ? item['title'] : null,
+//       initialDescription: item != null ? item['description'] : null,
+//       initialImageUrl: item != null ? item['public_url'] : null,
+//     );
+
+//     if (result == null) return;
+
+//     try {
+//       final file = result['imageFile'] as File?;
+//       if (item == null && file == null) {
+//         // New item requires image
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text("Please select an image.")),
+//         );
+//         return;
+//       }
+
+//       if (item == null) {
+//         // Add new
+//         final bytes = await file!.readAsBytes();
+//         await InfluencerService().uploadPortfolioItem(
+//           influencerId: userId,
+//           bytes: bytes,
+//           filename: file.path.split('/').last,
+//           title: result['title'] ?? 'Untitled',
+//           description: result['description'] ?? 'No description provided',
+//         );
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text("Portfolio item added successfully!")),
+//         );
+//       } else {
+//         // Edit existing
+//         await InfluencerService().updatePortfolioItem(
+//           itemId: item['id'],
+//           influencerId: userId,
+//           newBytes: file != null ? await file.readAsBytes() : null,
+//           filename: file != null ? file.path.split('/').last : null,
+//           title: result['title'] ?? 'Untitled',
+//           description: result['description'] ?? 'No description provided',
+//         );
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text("Portfolio item updated successfully!")),
+//         );
+//       }
+
+//       await context.read<InfluencerProvider>().fetchPortfolio(userId);
+//     } catch (e) {
+//       if (!mounted) return;
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Error: $e")),
+//       );
+//     }
+//   }
+
+//   // ---------- Delete portfolio item ----------
+//   Future<void> _deleteItem(Map<String, dynamic> item) async {
+//     final userId = context.read<AuthProvider>().currentUser?.id;
+//     if (userId == null) return;
+
+//     final confirm = await showDialog<bool>(
+//       context: context,
+//       builder: (context) => AlertDialog(
+//         title: const Text("Delete Item?"),
+//         content: const Text("Are you sure you want to delete this item?"),
+//         actions: [
+//           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+//           ElevatedButton(
+//             onPressed: () => Navigator.pop(context, true),
+//             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+//             child: const Text("Delete"),
+//           ),
+//         ],
+//       ),
+//     );
+
+//     if (confirm != true) return;
+
+//     await InfluencerService().deletePortfolioItem(item['id']);
+//     await context.read<InfluencerProvider>().fetchPortfolio(userId);
+
+//     if (!mounted) return;
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(content: Text("Item deleted successfully.")),
+//     );
+//   }
+
+//   void _showItemOptions(Map<String, dynamic> item) {
+//     showModalBottomSheet(
+//       context: context,
+//       builder: (context) => SafeArea(
+//         child: Wrap(
+//           children: [
+//             ListTile(
+//               leading: const Icon(Icons.edit, color: Colors.blue),
+//               title: const Text('Edit'),
+//               onTap: () {
+//                 Navigator.pop(context);
+//                 _addOrEditPortfolio(item: item);
+//               },
+//             ),
+//             ListTile(
+//               leading: const Icon(Icons.delete, color: Colors.red),
+//               title: const Text('Delete'),
+//               onTap: () {
+//                 Navigator.pop(context);
+//                 _deleteItem(item);
+//               },
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       final id = context.read<AuthProvider>().currentUser?.id;
+//       if (id != null) {
+//         context.read<InfluencerProvider>().fetchPortfolio(id);
+//       }
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final portfolio = context.watch<InfluencerProvider>().portfolio;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text("My Portfolio"),
+//         backgroundColor: const Color(0xFFB25640),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         backgroundColor: const Color(0xFFB25640),
+//         onPressed: () => _addOrEditPortfolio(),
+//         child: const Icon(Icons.add_a_photo),
+//       ),
+//       body: portfolio.isEmpty
+//           ? const Center(
+//               child: Text(
+//                 "No portfolio items yet.\nTap + to add one!",
+//                 textAlign: TextAlign.center,
+//                 style: TextStyle(fontSize: 16),
+//               ),
+//             )
+//           : GridView.builder(
+//               padding: const EdgeInsets.all(10),
+//               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+//                 crossAxisCount: 2,
+//                 crossAxisSpacing: 8,
+//                 mainAxisSpacing: 8,
+//                 childAspectRatio: 0.8,
+//               ),
+//               itemCount: portfolio.length,
+//               itemBuilder: (_, i) {
+//                 final item = portfolio[i];
+//                 final imageUrl = item['public_url'] ?? '';
+//                 final title = item['title'] ?? 'Untitled';
+//                 final description = item['description'] ?? 'No description available';
+
+//                 return GestureDetector(
+//                   onLongPress: () => _showItemOptions(item),
+//                   child: Card(
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                     ),
+//                     clipBehavior: Clip.antiAlias,
+//                     elevation: 3,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Expanded(
+//                           child: imageUrl.isNotEmpty
+//                               ? Image.network(
+//                                   imageUrl,
+//                                   width: double.infinity,
+//                                   fit: BoxFit.cover,
+//                                   errorBuilder: (_, __, ___) =>
+//                                       const Icon(Icons.broken_image, size: 60),
+//                                 )
+//                               : Container(
+//                                   color: Colors.grey[300],
+//                                   child: const Center(
+//                                     child: Icon(Icons.image_not_supported, size: 50),
+//                                   ),
+//                                 ),
+//                         ),
+//                         Padding(
+//                           padding: const EdgeInsets.all(8.0),
+//                           child: Text(
+//                             title,
+//                             style: const TextStyle(
+//                               fontWeight: FontWeight.bold,
+//                               fontSize: 14,
+//                             ),
+//                             maxLines: 1,
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                         Padding(
+//                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
+//                           child: Text(
+//                             description,
+//                             style: const TextStyle(fontSize: 12, color: Colors.grey),
+//                             maxLines: 2,
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 );
+//               },
+//             ),
+//     );
+//   }
+// }
+// import 'dart:typed_data';
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:provider/provider.dart';
+// import '../../providers/auth_provider.dart';
+// import '../../providers/influencer_provider.dart';
+// import '../../services/influencer_service.dart';
+
+// class PortfolioScreen extends StatefulWidget {
+//   const PortfolioScreen({super.key});
+
+//   @override
+//   State<PortfolioScreen> createState() => _PortfolioScreenState();
+// }
+
+// class _PortfolioScreenState extends State<PortfolioScreen> {
+//   final ImagePicker _picker = ImagePicker();
+
+//   Future<Map<String, dynamic>?> _getPortfolioDialog({
+//     String? initialTitle,
+//     String? initialDescription,
+//     String? initialImageUrl,
+//   }) async {
+//     final titleController = TextEditingController(text: initialTitle ?? '');
+//     final descController = TextEditingController(text: initialDescription ?? '');
+//     File? pickedImage;
+
+//     return await showDialog<Map<String, dynamic>>(
+//       context: context,
+//       builder: (context) => StatefulBuilder(
+//         builder: (context, setState) => AlertDialog(
+//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//           title: Text(initialTitle == null ? 'Add Portfolio Item' : 'Edit Portfolio Item'),
+//           content: SingleChildScrollView(
+//             child: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 TextField(
+//                   controller: titleController,
+//                   decoration: InputDecoration(
+//                     labelText: 'Title',
+//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//                   ),
+//                 ),
+//                 const SizedBox(height: 12),
+//                 TextField(
+//                   controller: descController,
+//                   decoration: InputDecoration(
+//                     labelText: 'Description',
+//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//                   ),
+//                   maxLines: 3,
+//                 ),
+//                 const SizedBox(height: 16),
+//                 GestureDetector(
+//                   onTap: () {
+//                     showModalBottomSheet(
+//                       context: context,
+//                       shape: const RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//                       ),
+//                       builder: (_) => SafeArea(
+//                         child: Wrap(
+//                           children: [
+//                             ListTile(
+//                               leading: const Icon(Icons.camera_alt),
+//                               title: const Text('Take a Photo'),
+//                               onTap: () async {
+//                                 Navigator.pop(context);
+//                                 final XFile? file = await _picker.pickImage(source: ImageSource.camera);
+//                                 if (file != null) setState(() => pickedImage = File(file.path));
+//                               },
+//                             ),
+//                             ListTile(
+//                               leading: const Icon(Icons.photo_library),
+//                               title: const Text('Choose from Gallery'),
+//                               onTap: () async {
+//                                 Navigator.pop(context);
+//                                 final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+//                                 if (file != null) setState(() => pickedImage = File(file.path));
+//                               },
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     );
+//                   },
+//                   child: Container(
+//                     height: 160,
+//                     width: double.infinity,
+//                     decoration: BoxDecoration(
+//                       borderRadius: BorderRadius.circular(16),
+//                       color: Colors.grey[300],
+//                       border: Border.all(color: Colors.grey.shade400),
+//                     ),
+//                     child: ClipRRect(
+//                       borderRadius: BorderRadius.circular(16),
+//                       child: pickedImage != null
+//                           ? Image.file(pickedImage!, fit: BoxFit.cover)
+//                           : initialImageUrl != null
+//                               ? Image.network(initialImageUrl, fit: BoxFit.cover)
+//                               : const Center(child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey)),
+//                     ),
+//                   ),
+//                 ),
+//                 const SizedBox(height: 8),
+//                 Text(
+//                   pickedImage != null || initialImageUrl != null
+//                       ? 'Tap to change image'
+//                       : 'Tap to add image',
+//                   style: const TextStyle(fontSize: 12, color: Colors.grey),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           actions: [
+//             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+//             ElevatedButton(
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: const Color(0xFFB25640),
+//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//               ),
+//               onPressed: () {
+//                 Navigator.pop(context, {
+//                   'title': titleController.text.trim(),
+//                   'description': descController.text.trim(),
+//                   'imageFile': pickedImage,
+//                 });
+//               },
+//               child: const Text('Save'),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Future<void> _addOrEditPortfolio({Map<String, dynamic>? item}) async {
+//     final authProvider = context.read<AuthProvider>();
+//     final userId = authProvider.currentUser?.id;
+//     if (userId == null) return;
+
+//     final result = await _getPortfolioDialog(
+//       initialTitle: item != null ? item['title'] : null,
+//       initialDescription: item != null ? item['description'] : null,
+//       initialImageUrl: item != null ? item['public_url'] : null,
+//     );
+
+//     if (result == null) return;
+
+//     try {
+//       final file = result['imageFile'] as File?;
+//       if (item == null && file == null) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text("Please select an image.")),
+//         );
+//         return;
+//       }
+
+//       if (item == null) {
+//         final bytes = await file!.readAsBytes();
+//         await InfluencerService().uploadPortfolioItem(
+//           influencerId: userId,
+//           bytes: bytes,
+//           filename: file.path.split('/').last,
+//           title: result['title'] ?? 'Untitled',
+//           description: result['description'] ?? 'No description provided',
+//         );
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text("Portfolio item added successfully!")),
+//         );
+//       } else {
+//         await InfluencerService().updatePortfolioItem(
+//           itemId: item['id'],
+//           influencerId: userId,
+//           newBytes: file != null ? await file.readAsBytes() : null,
+//           filename: file != null ? file.path.split('/').last : null,
+//           title: result['title'] ?? 'Untitled',
+//           description: result['description'] ?? 'No description provided',
+//         );
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text("Portfolio item updated successfully!")),
+//         );
+//       }
+
+//       await context.read<InfluencerProvider>().fetchPortfolio(userId);
+//     } catch (e) {
+//       if (!mounted) return;
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Error: $e")),
+//       );
+//     }
+//   }
+
+//   Future<void> _deleteItem(Map<String, dynamic> item) async {
+//     final userId = context.read<AuthProvider>().currentUser?.id;
+//     if (userId == null) return;
+
+//     final confirm = await showDialog<bool>(
+//       context: context,
+//       builder: (context) => AlertDialog(
+//         title: const Text("Delete Item?"),
+//         content: const Text("Are you sure you want to delete this item?"),
+//         actions: [
+//           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+//           ElevatedButton(
+//             onPressed: () => Navigator.pop(context, true),
+//             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+//             child: const Text("Delete"),
+//           ),
+//         ],
+//       ),
+//     );
+
+//     if (confirm != true) return;
+
+//     await InfluencerService().deletePortfolioItem(item['id']);
+//     await context.read<InfluencerProvider>().fetchPortfolio(userId);
+
+//     if (!mounted) return;
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(content: Text("Item deleted successfully.")),
+//     );
+//   }
+
+//   void _showItemOptions(Map<String, dynamic> item) {
+//     showModalBottomSheet(
+//       context: context,
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//       ),
+//       builder: (context) => SafeArea(
+//         child: Wrap(
+//           children: [
+//             ListTile(
+//               leading: const Icon(Icons.edit, color: Colors.blue),
+//               title: const Text('Edit'),
+//               onTap: () {
+//                 Navigator.pop(context);
+//                 _addOrEditPortfolio(item: item);
+//               },
+//             ),
+//             ListTile(
+//               leading: const Icon(Icons.delete, color: Colors.red),
+//               title: const Text('Delete'),
+//               onTap: () {
+//                 Navigator.pop(context);
+//                 _deleteItem(item);
+//               },
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       final id = context.read<AuthProvider>().currentUser?.id;
+//       if (id != null) context.read<InfluencerProvider>().fetchPortfolio(id);
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final portfolio = context.watch<InfluencerProvider>().portfolio;
+
+//     return Scaffold(
+//       backgroundColor: const Color(0xFFF5F5F5),
+//       appBar: AppBar(
+//         title: const Text("My Portfolio",style: TextStyle(
+//             fontWeight: FontWeight.w700,
+//             fontSize: 20,
+//             letterSpacing: -0.3,
+//             color: Colors.white,
+//           ),),
+//         backgroundColor: const Color(0xFFB25640),
+//         elevation: 4,
+//         shape: const RoundedRectangleBorder(
+//           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+//         ),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         backgroundColor: const Color(0xFFB25640),
+//         onPressed: () => _addOrEditPortfolio(),
+//         child: const Icon(Icons.add_a_photo, size: 28),
+//       ),
+//       body: portfolio.isEmpty
+//           ? Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: const [
+//                   Icon(Icons.photo_library, size: 80, color: Colors.grey),
+//                   SizedBox(height: 16),
+//                   Text(
+//                     "No portfolio items yet.\nTap + to add one!",
+//                     textAlign: TextAlign.center,
+//                     style: TextStyle(fontSize: 16, color: Colors.grey),
+//                   ),
+//                 ],
+//               ),
+//             )
+//           : GridView.builder(
+//               padding: const EdgeInsets.all(12),
+//               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+//                 crossAxisCount: 2,
+//                 crossAxisSpacing: 12,
+//                 mainAxisSpacing: 12,
+//                 childAspectRatio: 0.75,
+//               ),
+//               itemCount: portfolio.length,
+//               itemBuilder: (_, i) {
+//                 final item = portfolio[i];
+//                 final imageUrl = item['public_url'] ?? '';
+//                 final title = item['title'] ?? 'Untitled';
+//                 final description = item['description'] ?? 'No description available';
+
+//                 return GestureDetector(
+//                   onLongPress: () => _showItemOptions(item),
+//                   child: Stack(
+//                     children: [
+//                       Container(
+//                         decoration: BoxDecoration(
+//                           borderRadius: BorderRadius.circular(20),
+//                           gradient: const LinearGradient(
+//                             colors: [Color(0xFFB25640), Color(0xFFD98C70)],
+//                             begin: Alignment.topLeft,
+//                             end: Alignment.bottomRight,
+//                           ),
+//                           boxShadow: [
+//                             BoxShadow(
+//                               color: Colors.black.withOpacity(0.2),
+//                               blurRadius: 8,
+//                               offset: const Offset(0, 4),
+//                             ),
+//                           ],
+//                         ),
+//                         child: ClipRRect(
+//                           borderRadius: BorderRadius.circular(20),
+//                           child: imageUrl.isNotEmpty
+//                               ? Image.network(
+//                                   imageUrl,
+//                                   width: double.infinity,
+//                                   height: double.infinity,
+//                                   fit: BoxFit.cover,
+//                                   errorBuilder: (_, __, ___) =>
+//                                       const Icon(Icons.broken_image, size: 60, color: Colors.white),
+//                                 )
+//                               : Container(
+//                                   color: Colors.grey[300],
+//                                   child: const Center(
+//                                     child: Icon(Icons.image_not_supported, size: 50, color: Colors.white),
+//                                   ),
+//                                 ),
+//                         ),
+//                       ),
+//                       Positioned(
+//                         bottom: 0,
+//                         left: 0,
+//                         right: 0,
+//                         child: Container(
+//                           padding: const EdgeInsets.all(10),
+//                           decoration: BoxDecoration(
+//                             color: Colors.black.withOpacity(0.4),
+//                             borderRadius: const BorderRadius.only(
+//                               bottomLeft: Radius.circular(20),
+//                               bottomRight: Radius.circular(20),
+//                             ),
+//                           ),
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               Text(
+//                                 title,
+//                                 style: const TextStyle(
+//                                   color: Colors.white,
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 14,
+//                                 ),
+//                                 maxLines: 1,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                               const SizedBox(height: 2),
+//                               Text(
+//                                 description,
+//                                 style: const TextStyle(
+//                                   color: Colors.white70,
+//                                   fontSize: 11,
+//                                 ),
+//                                 maxLines: 2,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             ),
+//     );
+//   }
+// }
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:influencer_marketplace_application/screens/influencer/PortfolioAddEditScreen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/influencer_provider.dart';
@@ -1250,188 +2019,15 @@ class PortfolioScreen extends StatefulWidget {
 }
 
 class _PortfolioScreenState extends State<PortfolioScreen> {
-  final ImagePicker _picker = ImagePicker();
-
-  // ---------- Unified Add/Edit Dialog with Camera/Gallery ----------
-  Future<Map<String, dynamic>?> _getPortfolioDialog({
-    String? initialTitle,
-    String? initialDescription,
-    String? initialImageUrl,
-  }) async {
-    final titleController = TextEditingController(text: initialTitle ?? '');
-    final descController = TextEditingController(text: initialDescription ?? '');
-    File? pickedImage;
-
-    return await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(initialTitle == null ? 'Add Portfolio Item' : 'Edit Portfolio Item'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Title field
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
-                ),
-                const SizedBox(height: 8),
-                // Description field
-                TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                // Image picker
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (_) => SafeArea(
-                        child: Wrap(
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.camera_alt),
-                              title: const Text('Take a Photo'),
-                              onTap: () async {
-                                Navigator.pop(context);
-                                final XFile? file = await _picker.pickImage(source: ImageSource.camera);
-                                if (file != null) {
-                                  setState(() {
-                                    pickedImage = File(file.path);
-                                  });
-                                }
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.photo_library),
-                              title: const Text('Choose from Gallery'),
-                              onTap: () async {
-                                Navigator.pop(context);
-                                final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
-                                if (file != null) {
-                                  setState(() {
-                                    pickedImage = File(file.path);
-                                  });
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 150,
-                    width: double.infinity,
-                    color: Colors.grey[300],
-                    child: pickedImage != null
-                        ? Image.file(pickedImage!, fit: BoxFit.cover)
-                        : initialImageUrl != null
-                            ? Image.network(initialImageUrl, fit: BoxFit.cover)
-                            : const Center(
-                                child: Icon(Icons.add_a_photo, size: 50),
-                              ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  pickedImage != null
-                      ? 'Tap to change image'
-                      : initialImageUrl != null
-                          ? 'Tap to change image'
-                          : 'Tap to add image',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB25640)),
-              onPressed: () {
-                Navigator.pop(context, {
-                  'title': titleController.text.trim(),
-                  'description': descController.text.trim(),
-                  'imageFile': pickedImage,
-                });
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final id = context.read<AuthProvider>().currentUser?.id;
+      if (id != null) context.read<InfluencerProvider>().fetchPortfolio(id);
+    });
   }
 
-  // ---------- Add or Edit portfolio ----------
-  Future<void> _addOrEditPortfolio({Map<String, dynamic>? item}) async {
-    final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.currentUser?.id;
-    if (userId == null) return;
-
-    final result = await _getPortfolioDialog(
-      initialTitle: item != null ? item['title'] : null,
-      initialDescription: item != null ? item['description'] : null,
-      initialImageUrl: item != null ? item['public_url'] : null,
-    );
-
-    if (result == null) return;
-
-    try {
-      final file = result['imageFile'] as File?;
-      if (item == null && file == null) {
-        // New item requires image
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please select an image.")),
-        );
-        return;
-      }
-
-      if (item == null) {
-        // Add new
-        final bytes = await file!.readAsBytes();
-        await InfluencerService().uploadPortfolioItem(
-          influencerId: userId,
-          bytes: bytes,
-          filename: file.path.split('/').last,
-          title: result['title'] ?? 'Untitled',
-          description: result['description'] ?? 'No description provided',
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Portfolio item added successfully!")),
-        );
-      } else {
-        // Edit existing
-        await InfluencerService().updatePortfolioItem(
-          itemId: item['id'],
-          influencerId: userId,
-          newBytes: file != null ? await file.readAsBytes() : null,
-          filename: file != null ? file.path.split('/').last : null,
-          title: result['title'] ?? 'Untitled',
-          description: result['description'] ?? 'No description provided',
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Portfolio item updated successfully!")),
-        );
-      }
-
-      await context.read<InfluencerProvider>().fetchPortfolio(userId);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
-  }
-
-  // ---------- Delete portfolio item ----------
   Future<void> _deleteItem(Map<String, dynamic> item) async {
     final userId = context.read<AuthProvider>().currentUser?.id;
     if (userId == null) return;
@@ -1463,9 +2059,28 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     );
   }
 
+  void _openAddEditScreen({Map<String, dynamic>? item}) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PortfolioAddEditScreen(item: item),
+      ),
+    );
+
+    if (result == true) {
+      final userId = context.read<AuthProvider>().currentUser?.id;
+      if (userId != null) {
+        context.read<InfluencerProvider>().fetchPortfolio(userId);
+      }
+    }
+  }
+
   void _showItemOptions(Map<String, dynamic> item) {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => SafeArea(
         child: Wrap(
           children: [
@@ -1474,7 +2089,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               title: const Text('Edit'),
               onTap: () {
                 Navigator.pop(context);
-                _addOrEditPortfolio(item: item);
+                _openAddEditScreen(item: item);
               },
             ),
             ListTile(
@@ -1492,45 +2107,54 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final id = context.read<AuthProvider>().currentUser?.id;
-      if (id != null) {
-        context.read<InfluencerProvider>().fetchPortfolio(id);
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final portfolio = context.watch<InfluencerProvider>().portfolio;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text("My Portfolio"),
+        title: const Text(
+          "My Portfolio",
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: -0.3,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: const Color(0xFFB25640),
+        elevation: 4,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFB25640),
-        onPressed: () => _addOrEditPortfolio(),
-        child: const Icon(Icons.add_a_photo),
+        onPressed: () => _openAddEditScreen(),
+        child: const Icon(Icons.add_a_photo, size: 28),
       ),
       body: portfolio.isEmpty
-          ? const Center(
-              child: Text(
-                "No portfolio items yet.\nTap + to add one!",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.photo_library, size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No portfolio items yet.\nTap + to add one!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
               ),
             )
           : GridView.builder(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.8,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.75,
               ),
               itemCount: portfolio.length,
               itemBuilder: (_, i) {
@@ -1541,54 +2165,84 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
                 return GestureDetector(
                   onLongPress: () => _showItemOptions(item),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    elevation: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
+                  child: Stack(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFB25640), Color(0xFFD98C70)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
                           child: imageUrl.isNotEmpty
                               ? Image.network(
                                   imageUrl,
                                   width: double.infinity,
+                                  height: double.infinity,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) =>
-                                      const Icon(Icons.broken_image, size: 60),
+                                      const Icon(Icons.broken_image, size: 60, color: Colors.white),
                                 )
                               : Container(
                                   color: Colors.grey[300],
                                   child: const Center(
-                                    child: Icon(Icons.image_not_supported, size: 50),
+                                    child: Icon(Icons.image_not_supported, size: 50, color: Colors.white),
                                   ),
                                 ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.4),
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(20),
+                              bottomRight: Radius.circular(20),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                description,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 11,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            description,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },

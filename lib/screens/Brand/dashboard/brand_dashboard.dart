@@ -2983,7 +2983,9 @@ import 'package:flutter/material.dart';
 import 'package:influencer_marketplace_application/screens/influencer/influencer_dashboard.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 import '../../../utils/app_theme.dart';
+import '../../../providers/theme_provider.dart';
 import '../analytics/campaign_analytics_screen.dart';
 import '../profile/brand_profile_screen.dart';
 import 'campaign_list_screen.dart';
@@ -3133,6 +3135,8 @@ class _BrandDashboardState extends State<BrandDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDark;
     final screens = [
       _buildHome(),
       const CampaignListScreen(),
@@ -3142,56 +3146,135 @@ class _BrandDashboardState extends State<BrandDashboard> {
 
     return Scaffold(
       body: screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: Colors.grey,
-        onTap: _onNavTap,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.megaphone), label: "Campaigns"),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.barChart2), label: "Analytics"),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: "Profile"),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          selectedItemColor: AppTheme.primaryColor,
+          unselectedItemColor: isDark ? Colors.grey.shade500 : Colors.grey,
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          onTap: _onNavTap,
+          type: BottomNavigationBarType.fixed,
+          selectedFontSize: 12,
+          unselectedFontSize: 11,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: "Home"),
+            BottomNavigationBarItem(icon: Icon(LucideIcons.megaphone), label: "Campaigns"),
+            BottomNavigationBarItem(icon: Icon(LucideIcons.barChart2), label: "Analytics"),
+            BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: "Profile"),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHome() {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDark;
+    
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text("Brand Dashboard"),
+        elevation: 0,
         backgroundColor: AppTheme.primaryColor,
+        title: const Text(
+          "Brand Dashboard",
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: -0.3,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: false,
       ),
       body: SafeArea(
         child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: AppTheme.primaryColor,
+                ),
+              )
             : _error
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text("Failed to load influencers"),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
+                        Icon(
+                          LucideIcons.alertCircle,
+                          size: 64,
+                          color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Failed to load influencers",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryColor,
+                                AppTheme.primaryColor.withOpacity(0.8),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
                             onPressed: _fetchInfluencers,
-                            child: const Text("Retry"))
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                            icon: const Icon(LucideIcons.refreshCw, color: Colors.white, size: 18),
+                            label: const Text(
+                              "Retry",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   )
                 : SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.only(bottom: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildBanners(),
-                        const SizedBox(height: 14),
-                        _buildModernCategories(),
                         const SizedBox(height: 20),
+                        _buildModernCategories(),
+                        const SizedBox(height: 24),
                         _buildSection(
                             "Popular Influencers", popularInfluencers, "popular"),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
                         _buildSection(
                             "Trending Influencers", trendingInfluencers, "trending"),
                       ],
@@ -3202,81 +3285,185 @@ class _BrandDashboardState extends State<BrandDashboard> {
   }
 
   Widget _buildBanners() {
-    return SizedBox(
-      height: 180,
-      child: PageView.builder(
-        controller: _pageController,
-        itemCount: _bannerImages.length,
-        itemBuilder: (context, i) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              image: DecorationImage(
-                image: NetworkImage(_bannerImages[i]),
-                fit: BoxFit.cover,
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDark;
+    
+    return Column(
+      children: [
+        SizedBox(
+          height: 200,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: _bannerImages.length,
+            onPageChanged: (index) {
+              setState(() {
+                _bannerIndex = index;
+              });
+            },
+            itemBuilder: (context, i) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.4 : 0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        _bannerImages[i],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                          child: Icon(
+                            LucideIcons.image,
+                            size: 50,
+                            color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                          ),
+                        ),
+                      ),
+                      // Gradient overlay for better text readability
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.3),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Page indicators
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            _bannerImages.length,
+            (index) => AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: _bannerIndex == index ? 24 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: _bannerIndex == index
+                    ? AppTheme.primaryColor
+                    : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildModernCategories() {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDark;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            "Categories",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Icon(
+                LucideIcons.layoutGrid,
+                size: 20,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "Categories",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         SizedBox(
           height: 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             itemCount: _nicheOptions.length,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemBuilder: (context, i) {
               final cat = _nicheOptions[i];
               final selected = _selectedCategory == cat;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                curve: Curves.easeInOut,
+                margin: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
                   gradient: selected
-                      ? LinearGradient(colors: [
-                          AppTheme.primaryColor.withOpacity(0.9),
-                          AppTheme.primaryColor.withOpacity(0.6)
-                        ])
+                      ? LinearGradient(
+                          colors: [
+                            AppTheme.primaryColor,
+                            AppTheme.primaryColor.withOpacity(0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
                       : null,
                   border: selected
                       ? null
-                      : Border.all(color: Colors.grey.shade300),
-                  color: selected ? null : Colors.white,
+                      : Border.all(
+                          color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                  color: selected ? null : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
                   boxShadow: selected
                       ? [
                           BoxShadow(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                            color: AppTheme.primaryColor.withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
                           )
                         ]
-                      : [],
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          )
+                        ],
                 ),
                 child: Center(
                   child: Text(
                     cat,
                     style: TextStyle(
-                      color: selected ? Colors.white : Colors.black87,
-                      fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                      fontSize: 13.5,
+                      color: selected
+                          ? Colors.white
+                          : (isDark ? Colors.grey.shade300 : Colors.black87),
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      fontSize: 13,
+                      letterSpacing: 0.2,
                     ),
                   ),
                 ),
@@ -3290,16 +3477,44 @@ class _BrandDashboardState extends State<BrandDashboard> {
 
   Widget _buildSection(
       String title, List<Map<String, dynamic>> influencers, String type) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDark;
+    final icon = type == "popular" ? LucideIcons.trendingUp : LucideIcons.flame;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(title,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryColor,
+                      AppTheme.primaryColor.withOpacity(0.7),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _influencerList(influencers, type),
       ],
     );
@@ -3307,10 +3522,32 @@ class _BrandDashboardState extends State<BrandDashboard> {
 
   // Updated _influencerList to show "View All" as a card
   Widget _influencerList(List<Map<String, dynamic>> influencers, String type) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDark;
+    
     if (influencers.isEmpty) {
-      return const SizedBox(
-        height: 100,
-        child: Center(child: Text("No influencers found")),
+      return SizedBox(
+        height: 200,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                LucideIcons.users,
+                size: 48,
+                color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "No influencers found",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -3318,29 +3555,44 @@ class _BrandDashboardState extends State<BrandDashboard> {
     final itemCount = displayList.length >= 3 ? 4 : displayList.length;
 
     return SizedBox(
-      height: 190,
+      height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         itemCount: itemCount,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemBuilder: (context, i) {
           if (i == 3) {
             // "View All" card
             return Container(
-              width: 150,
-              margin: const EdgeInsets.only(left: 8, right: 16),
+              width: 160,
+              margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryColor.withOpacity(0.1),
+                    AppTheme.primaryColor.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppTheme.primaryColor.withOpacity(0.3),
+                  width: 2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 6,
-                      offset: const Offset(0, 4))
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
                 ],
               ),
-              child: Center(
-                child: TextButton(
-                  onPressed: () {
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -3354,10 +3606,41 @@ class _BrandDashboardState extends State<BrandDashboard> {
                       ),
                     );
                   },
-                  child: const Text(
-                    "View All",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          LucideIcons.arrowRight,
+                          color: AppTheme.primaryColor,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "View All",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${influencers.length} influencers",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -3382,51 +3665,124 @@ class _BrandDashboardState extends State<BrandDashboard> {
               );
             },
             child: Container(
-              width: 150,
-              margin: EdgeInsets.only(
-                left: i == 0 ? 16 : 8,
-                right: i == 2 ? 8 : 0,
-              ),
+              width: 160,
+              margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 6,
-                      offset: const Offset(0, 4))
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  )
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(12)),
-                    child: Image.network(
-                      image,
-                      height: 100,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        height: 100,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.person,
-                            size: 40, color: Colors.grey),
-                      ),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    child: Stack(
+                      children: [
+                        Image.network(
+                          image,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 120,
+                            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                            child: Icon(
+                              LucideIcons.user,
+                              size: 40,
+                              color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                            ),
+                          ),
+                        ),
+                        // Gradient overlay
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 40,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.6),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(inf['name'] ?? 'Unknown',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
-                      overflow: TextOverflow.ellipsis),
-                  Text('${inf['follower_count']} followers',
-                      style:
-                          const TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('Eng: ${inf['engagement_rate']}%',
-                      style:
-                          const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          inf['name'] ?? 'Unknown',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            Icon(
+                              LucideIcons.users,
+                              size: 12,
+                              color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                '${inf['follower_count']}',
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Icon(
+                              LucideIcons.trendingUp,
+                              size: 12,
+                              color: const Color(0xFF10B981),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${inf['engagement_rate']?.toStringAsFixed(1) ?? '0.0'}%',
+                              style: const TextStyle(
+                                color: Color(0xFF10B981),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
